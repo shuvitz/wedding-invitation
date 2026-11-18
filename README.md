@@ -67,7 +67,7 @@ php artisan migrate
 php artisan db:seed
 ```
 
-Seeding creates a single admin account so you can log in for the first time:
+Seeding creates an admin account so you can log in for the first time, plus a fictional demo invitation (Raka & Sekar) published as the homepage. To add or refresh only the demo, e.g. on a server, run `php artisan db:seed --class=DemoInvitationSeeder`; it updates the same page instead of duplicating it. Admin login:
 
 ```
 email:    test@example.com
