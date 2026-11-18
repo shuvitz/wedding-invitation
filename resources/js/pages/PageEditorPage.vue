@@ -211,6 +211,10 @@
                                     <Label>Title</Label>
                                     <Input v-model="block.data.title" placeholder="Schedule" :disabled="!canEdit" />
                                 </div>
+                                <label class="flex items-center gap-2 text-sm">
+                                    <Checkbox v-model="block.data.show_countdown" :disabled="!canEdit" />
+                                    Show countdown to the first event
+                                </label>
 
                                 <div v-for="(item, itemIndex) in block.data.items" :key="itemIndex" class="space-y-3 rounded-md border border-border p-3">
                                     <div class="flex items-center justify-between">
@@ -526,7 +530,7 @@ function defaultBlockData(type) {
         case 'gallery':
             return { title: '', items: [] };
         case 'schedule':
-            return { title: '', items: [] };
+            return { title: '', show_countdown: false, items: [] };
         case 'form':
             return { form_key: '', title: '', submit_label: '', success_message: '', fields: [] };
         case 'couple': {

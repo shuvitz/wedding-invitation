@@ -200,6 +200,7 @@ class PublicApiTest extends TestCase
             ->assertJsonPath('data.content.blocks.0.data.items.0.title', 'Akad')
             ->assertJsonPath('data.content.blocks.0.data.items.0.date', '2026-06-13')
             ->assertJsonPath('data.content.blocks.0.data.items.0.start_time', '08:00')
+            ->assertJsonPath('data.content.blocks.0.data.show_countdown', false)
             ->assertJsonPath('data.content.blocks.0.data.items.0.end_time', null)
             ->assertJsonPath('data.content.blocks.0.data.items.0.maps_url', 'https://maps.app.goo.gl/abc');
     }

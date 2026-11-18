@@ -114,6 +114,7 @@ export interface ScheduleItem {
 
 export interface ScheduleBlockData {
     title: string | null
+    show_countdown: boolean // counts down to the first item
     items: ScheduleItem[]
 }
 

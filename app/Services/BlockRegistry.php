@@ -87,6 +87,7 @@ class BlockRegistry
             // event's local time as printed on an invitation.
             BlockType::Schedule => [
                 "{$prefix}.title" => ['nullable', 'string', 'max:255'],
+                "{$prefix}.show_countdown" => ['sometimes', 'boolean'],
                 "{$prefix}.items" => ['nullable', 'array'],
                 "{$prefix}.items.*.title" => ['required', 'string', 'max:255'],
                 "{$prefix}.items.*.date" => ['required', 'date_format:Y-m-d'],
@@ -228,6 +229,7 @@ class BlockRegistry
             ]],
             BlockType::Schedule => ['type' => 'schedule', 'data' => [
                 'title' => $data['title'] ?? null,
+                'show_countdown' => (bool) ($data['show_countdown'] ?? false),
                 'items' => array_values(array_map(fn (array $item) => [
                     'title' => $item['title'] ?? null,
                     'date' => $item['date'] ?? null,

@@ -234,7 +234,7 @@ class PageManagementTest extends TestCase
         $response = $this->actingAs($admin)->postJson('/api/pages', [
             'title' => 'Schedule Page',
             'content' => ['blocks' => [
-                ['type' => 'schedule', 'data' => ['title' => 'Acara', 'items' => [
+                ['type' => 'schedule', 'data' => ['title' => 'Acara', 'show_countdown' => true, 'items' => [
                     ['title' => 'Akad', 'date' => '2026-06-14', 'start_time' => '08:00', 'end_time' => '10:00', 'venue' => 'Masjid Raya', 'address' => 'Jl. Merdeka 1', 'maps_url' => 'https://maps.app.goo.gl/abc'],
                     ['title' => 'Resepsi', 'date' => '2026-06-14'],
                 ]]],
@@ -243,6 +243,7 @@ class PageManagementTest extends TestCase
 
         $response->assertCreated();
         $this->assertCount(2, Page::first()->content['blocks'][0]['data']['items']);
+        $this->assertTrue(Page::first()->content['blocks'][0]['data']['show_countdown']);
     }
 
     public function test_schedule_item_requires_title_and_valid_date_and_times(): void
@@ -252,7 +253,7 @@ class PageManagementTest extends TestCase
         $response = $this->actingAs($admin)->postJson('/api/pages', [
             'title' => 'Bad Schedule',
             'content' => ['blocks' => [
-                ['type' => 'schedule', 'data' => ['items' => [
+                ['type' => 'schedule', 'data' => ['show_countdown' => 'yes please', 'items' => [
                     ['venue' => 'no title or date'],
                     ['title' => 'x', 'date' => '2026-02-30', 'start_time' => '25:00', 'end_time' => '8am'],
                 ]]],
@@ -260,6 +261,7 @@ class PageManagementTest extends TestCase
         ]);
 
         $response->assertStatus(422)->assertJsonValidationErrors([
+            'content.blocks.0.data.show_countdown',
             'content.blocks.0.data.items.0.title',
             'content.blocks.0.data.items.0.date',
             'content.blocks.0.data.items.1.date',
