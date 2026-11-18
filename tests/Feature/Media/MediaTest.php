@@ -310,6 +310,27 @@ class MediaTest extends TestCase
             ->assertStatus(422)->assertJsonValidationErrors(['media']);
     }
 
+    public function test_media_referenced_in_a_cover_or_couple_block_cannot_be_deleted(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $cover = Media::factory()->create();
+        $person = Media::factory()->create();
+        Page::factory()->create([
+            'content' => ['blocks' => [
+                ['type' => 'cover', 'data' => ['names' => 'A & B', 'image_media_id' => $cover->id]],
+                ['type' => 'couple', 'data' => ['items' => [
+                    ['name' => 'A', 'image_media_id' => null],
+                    ['name' => 'B', 'image_media_id' => $person->id],
+                ]]],
+            ]],
+        ]);
+
+        foreach ([$cover, $person] as $media) {
+            $this->actingAs($admin)->deleteJson("/api/media/{$media->id}")
+                ->assertStatus(422)->assertJsonValidationErrors(['media']);
+        }
+    }
+
     public function test_media_referenced_by_a_draft_page_cannot_be_deleted(): void
     {
         // Draft, not published — still must be protected, since it could

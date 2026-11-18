@@ -67,7 +67,7 @@ php artisan migrate
 php artisan db:seed
 ```
 
-Seeding creates an admin account so you can log in for the first time, plus a fictional demo invitation (Raka & Sekar) published as the homepage. To add or refresh only the demo, e.g. on a server, run `php artisan db:seed --class=DemoInvitationSeeder`; it updates the same page instead of duplicating it. Admin login:
+Seeding creates an admin account so you can log in for the first time, plus a fictional demo invitation (Raka & Sekar) published as the homepage, with placeholder photos (gradient + initials) added to the Media library. To add or refresh only the demo, e.g. on a server, run `php artisan db:seed --class=DemoInvitationSeeder`; it updates the same page instead of duplicating it. Admin login:
 
 ```
 email:    test@example.com
@@ -76,7 +76,7 @@ password: password
 
 **Change this password immediately after first login** — it's a known default, not a secret.
 
-Migrations + seed alone produce a *usable but empty* CMS: one admin user, and empty Settings/Navigation/Media/Pages. There is no demo content — everything else is created through the admin UI.
+Migrations + seed produce one admin user plus the demo invitation above (one page and six photos in Media); Navigation is empty. Everything else is created through the admin UI.
 
 ### Environment variables
 

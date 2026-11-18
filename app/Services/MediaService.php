@@ -133,9 +133,9 @@ class MediaService
         $data = $block['data'] ?? [];
 
         return match ($block['type'] ?? null) {
-            'hero' => (int) ($data['image_media_id'] ?? 0) === $mediaId,
+            'hero', 'cover' => (int) ($data['image_media_id'] ?? 0) === $mediaId,
             'image' => (int) ($data['media_id'] ?? 0) === $mediaId,
-            'menu' => collect($data['items'] ?? [])->contains(fn ($item) => (int) ($item['image_media_id'] ?? 0) === $mediaId),
+            'menu', 'couple' => collect($data['items'] ?? [])->contains(fn ($item) => (int) ($item['image_media_id'] ?? 0) === $mediaId),
             'gallery' => collect($data['items'] ?? [])->contains(fn ($item) => (int) ($item['media_id'] ?? 0) === $mediaId),
             default => false,
         };

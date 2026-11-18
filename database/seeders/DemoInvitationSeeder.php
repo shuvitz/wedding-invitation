@@ -3,11 +3,13 @@
 namespace Database\Seeders;
 
 use App\Enums\PageStatus;
+use App\Models\Media;
 use App\Models\Page;
 use App\Models\Setting;
 use App\Services\BlockRegistry;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -18,7 +20,8 @@ use Illuminate\Validation\Rule;
  * Everything is made up on purpose. Instagram handles and maps links are
  * left empty (a made-up one may belong to a real person or place), and
  * account numbers are obviously fake so no visitor sends real money.
- * Photos are left empty too; add them through the admin.
+ * Photos are generated placeholders (gradient + initials, no real people)
+ * from database/seeders/demo-photos, copied into the media library.
  *
  *   php artisan db:seed --class=DemoInvitationSeeder
  */
@@ -73,6 +76,33 @@ class DemoInvitationSeeder extends Seeder
     }
 
     /**
+     * Copies a bundled placeholder into the media library, reusing the same
+     * row (matched by path) on re-runs. Returns the media ID.
+     */
+    private function photo(string $name, string $alt): int
+    {
+        $disk = config('media.disk', 'public');
+        $source = __DIR__."/demo-photos/{$name}";
+        $path = "media/demo/{$name}";
+
+        Storage::disk($disk)->put($path, file_get_contents($source));
+        [$width, $height] = getimagesize($source);
+
+        $media = Media::where('disk', $disk)->where('path', $path)->first() ?? new Media();
+        $media->disk = $disk;
+        $media->path = $path;
+        $media->original_name = "demo-{$name}";
+        $media->mime_type = 'image/jpeg';
+        $media->size = filesize($source);
+        $media->width = $width;
+        $media->height = $height;
+        $media->alt_text = $alt;
+        $media->save();
+
+        return $media->id;
+    }
+
+    /**
      * @return list<array{type: string, data: array<string, mixed>}>
      */
     private function blocks(): array
@@ -83,7 +113,7 @@ class DemoInvitationSeeder extends Seeder
                 'names' => 'Raka & Sekar',
                 'greeting' => 'Kepada Yth. Bapak/Ibu/Saudara/i',
                 'button_label' => 'Buka Undangan',
-                'image_media_id' => null,
+                'image_media_id' => $this->photo('cover.jpg', 'Raka & Sekar'),
             ]],
             ['type' => 'rich_text', 'data' => [
                 'title' => null,
@@ -92,8 +122,16 @@ class DemoInvitationSeeder extends Seeder
             ['type' => 'couple', 'data' => [
                 'title' => 'Mempelai',
                 'items' => [
-                    ['name' => 'Raka Pratama', 'parents' => 'Putra pertama dari Bapak Hendra Pratama & Ibu Wulan Sari', 'instagram' => null, 'image_media_id' => null],
-                    ['name' => 'Sekar Ayu Lestari', 'parents' => 'Putri kedua dari Bapak Bambang Wijaya & Ibu Ratna Dewi', 'instagram' => null, 'image_media_id' => null],
+                    ['name' => 'Raka Pratama', 'parents' => 'Putra pertama dari Bapak Hendra Pratama & Ibu Wulan Sari', 'instagram' => null, 'image_media_id' => $this->photo('raka.jpg', 'Raka Pratama')],
+                    ['name' => 'Sekar Ayu Lestari', 'parents' => 'Putri kedua dari Bapak Bambang Wijaya & Ibu Ratna Dewi', 'instagram' => null, 'image_media_id' => $this->photo('sekar.jpg', 'Sekar Ayu Lestari')],
+                ],
+            ]],
+            ['type' => 'gallery', 'data' => [
+                'title' => 'Galeri',
+                'items' => [
+                    ['media_id' => $this->photo('galeri-1.jpg', 'Galeri foto 1'), 'alt_text' => 'Galeri foto 1'],
+                    ['media_id' => $this->photo('galeri-2.jpg', 'Galeri foto 2'), 'alt_text' => 'Galeri foto 2'],
+                    ['media_id' => $this->photo('galeri-3.jpg', 'Galeri foto 3'), 'alt_text' => 'Galeri foto 3'],
                 ],
             ]],
             ['type' => 'schedule', 'data' => [
