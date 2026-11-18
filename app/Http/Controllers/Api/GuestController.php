@@ -8,6 +8,8 @@ use App\Http\Resources\GuestResource;
 use App\Models\FormSubmission;
 use App\Models\Guest;
 use App\Models\Setting;
+use App\Support\Csv;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -15,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class GuestController extends Controller
 {
@@ -31,21 +34,65 @@ class GuestController extends Controller
             ->orderBy('name')
             ->get();
 
-        // Each guest's latest reply, matched on the `?to=` name their link carried (case-insensitive).
+        return GuestResource::collection($this->withReplies($guests))
+            ->additional(['meta' => ['message_template' => Guest::messageTemplate()]]);
+    }
+
+    /**
+     * The whole list as CSV. The first three columns match the import
+     * format, so an exported file can be edited and imported elsewhere.
+     */
+    public function export(): StreamedResponse
+    {
+        Gate::authorize('manage', Guest::class);
+
+        $guests = $this->withReplies(Guest::query()->orderBy('name')->get());
+
+        return response()->streamDownload(function () use ($guests) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF"); // BOM, so Excel reads UTF-8 names correctly
+            fputcsv($out, ['name', 'phone', 'notes', 'invitation_link', 'replied_at', 'reply']);
+
+            foreach ($guests as $guest) {
+                // Answers in form order, minus the guest's own name (already in the first column).
+                $answers = collect($guest->reply?->data ?? [])
+                    ->reject(fn ($value) => $value === null || $value === '' || mb_strtolower((string) $value) === mb_strtolower($guest->name))
+                    ->implode(' · ');
+
+                fputcsv($out, array_map(Csv::cell(...), [
+                    $guest->name,
+                    $guest->phone,
+                    $guest->notes,
+                    $guest->invitationUrl(),
+                    $guest->reply?->created_at->toDateTimeString(),
+                    $answers,
+                ]));
+            }
+
+            fclose($out);
+        }, 'daftar-tamu.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    /**
+     * Sets each guest's latest reply (or null) as the `reply` relation,
+     * matched on the `?to=` name their link carried (case-insensitive).
+     *
+     * @param  Collection<int, Guest>  $guests
+     * @return Collection<int, Guest>
+     */
+    private function withReplies(Collection $guests): Collection
+    {
         // shortcut: renaming a guest unlinks replies sent under the old name; store a guest token in the link if that matters.
         $key = fn (string $name) => mb_strtolower($name);
         $replies = FormSubmission::query()
-            ->whereIn('invited_as', $guests->pluck('name'))
+            ->whereIn(DB::raw('LOWER(invited_as)'), $guests->map(fn (Guest $guest) => $key($guest->name)))
             ->latest()
             ->orderByDesc('id')
             ->get()
             ->unique(fn (FormSubmission $reply) => $key($reply->invited_as))
             ->keyBy(fn (FormSubmission $reply) => $key($reply->invited_as));
 
-        $guests->each(fn (Guest $guest) => $guest->setRelation('reply', $replies->get($key($guest->name))));
-
-        return GuestResource::collection($guests)
-            ->additional(['meta' => ['message_template' => Guest::messageTemplate()]]);
+        return $guests->each(fn (Guest $guest) => $guest->setRelation('reply', $replies->get($key($guest->name))));
     }
 
     /**
@@ -70,7 +117,8 @@ class GuestController extends Controller
         $duplicates = 0;
 
         foreach ($lines as $index => $line) {
-            $cells = array_map('trim', str_getcsv($line, $delimiter));
+            // Drops the "'" our exports put before =, +, - and @ (Csv::cell), so an exported file imports back as-is.
+            $cells = array_map(fn (?string $cell) => preg_replace("/^'(?=[=+\-@])/", '', trim((string) $cell)), str_getcsv($line, $delimiter));
             if (implode('', $cells) === '' || ($index === 0 && in_array(mb_strtolower($cells[0]), ['nama', 'name'], true))) {
                 continue;
             }

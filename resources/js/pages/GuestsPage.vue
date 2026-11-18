@@ -10,6 +10,7 @@
             </div>
             <div class="flex gap-2">
                 <input ref="importInput" type="file" accept=".csv,text/csv" class="hidden" @change="importCsv">
+                <Button as="a" :href="guestsApi.exportUrl" variant="outline">Export CSV</Button>
                 <Button variant="outline" :disabled="isImporting" @click="importInput.click()">
                     {{ isImporting ? 'Importing…' : 'Import CSV' }}
                 </Button>

@@ -8,6 +8,7 @@ use App\Http\Requests\FormSubmissions\IndexFormSubmissionRequest;
 use App\Http\Resources\FormSubmissionResource;
 use App\Models\FormSubmission;
 use App\Models\Page;
+use App\Support\Csv;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -43,7 +44,7 @@ class FormSubmissionController extends Controller
                 fputcsv($out, [
                     $submission->created_at->toDateTimeString(),
                     $submission->form_key,
-                    ...array_map(fn ($column) => self::csvCell($submission->data[$column] ?? ''), $columns),
+                    ...array_map(fn ($column) => Csv::cell($submission->data[$column] ?? ''), $columns),
                 ]);
             }
 
@@ -68,16 +69,5 @@ class FormSubmissionController extends Controller
             ->when($request->filled('form_key'), fn ($query) => $query->where('form_key', $request->string('form_key')))
             ->latest()
             ->orderByDesc('id');
-    }
-
-    /**
-     * Values come from the public, so a cell like `=HYPERLINK(...)` must
-     * not run as a formula when an admin opens the file in a spreadsheet.
-     */
-    private static function csvCell(mixed $value): string
-    {
-        $value = (string) $value;
-
-        return preg_match('/^[=+\-@\t\r]/', $value) ? "'".$value : $value;
     }
 }

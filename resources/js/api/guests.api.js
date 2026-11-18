@@ -17,6 +17,9 @@ export const guestsApi = {
         return http.delete(`/guests/${id}`);
     },
 
+    // A plain link (not XHR) so the browser handles the download; the session cookie authenticates it.
+    exportUrl: '/api/guests/export',
+
     import(file) {
         const form = new FormData();
         form.append('file', file);

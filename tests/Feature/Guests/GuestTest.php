@@ -136,6 +136,31 @@ class GuestTest extends TestCase
             ->assertOk()->assertJsonPath('data.created', 2);
     }
 
+    public function test_export_lists_guests_with_links_and_replies_and_imports_back(): void
+    {
+        config(['app.frontend_url' => 'https://undangan.example']);
+        $admin = User::factory()->admin()->create();
+        $page = Page::factory()->published()->create();
+        Guest::factory()->create(['name' => 'Budi', 'phone' => '+62 812-0000-0000', 'notes' => 'Kantor']);
+        Guest::factory()->create(['name' => '=HYPERLINK("http://evil")']);
+        FormSubmission::create(['page_id' => $page->id, 'form_key' => 'rsvp', 'invited_as' => 'budi', 'data' => ['nama' => 'Budi', 'kehadiran' => 'Hadir', 'jumlah_tamu' => 2]]);
+
+        $response = $this->actingAs($admin)->get('/api/guests/export');
+        $response->assertOk();
+        $csv = $response->streamedContent();
+
+        $this->assertStringContainsString("name,phone,notes,invitation_link,replied_at,reply\n", $csv);
+        $this->assertStringContainsString("Budi,\"'+62 812-0000-0000\",Kantor,https://undangan.example/?to=Budi,", $csv);
+        $this->assertStringContainsString(',"Hadir · 2"', $csv);
+        $this->assertStringContainsString("'=HYPERLINK", $csv);
+
+        Guest::query()->delete();
+        $this->actingAs($admin)
+            ->post('/api/guests/import', ['file' => UploadedFile::fake()->createWithContent('tamu.csv', $csv)], ['Accept' => 'application/json'])
+            ->assertOk()->assertJsonPath('data.created', 2);
+        $this->assertSame('+62 812-0000-0000', Guest::where('name', 'Budi')->value('phone'));
+    }
+
     public function test_guest_fields_are_validated(): void
     {
         $admin = User::factory()->admin()->create();
@@ -154,6 +179,7 @@ class GuestTest extends TestCase
         $this->actingAs($editor)->postJson('/api/guests', ['name' => 'X'])->assertForbidden();
         $this->actingAs($editor)->putJson("/api/guests/{$guest->id}", ['name' => 'X'])->assertForbidden();
         $this->actingAs($editor)->deleteJson("/api/guests/{$guest->id}")->assertForbidden();
+        $this->actingAs($editor)->get('/api/guests/export')->assertForbidden();
         $this->assertModelExists($guest);
     }
 }

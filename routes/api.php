@@ -66,6 +66,7 @@ Route::middleware('web')->group(function () {
         Route::get('/guests', [GuestController::class, 'index']);
         Route::post('/guests', [GuestController::class, 'store']);
         Route::post('/guests/import', [GuestController::class, 'import']);
+        Route::get('/guests/export', [GuestController::class, 'export']);
         Route::match(['put', 'patch'], '/guests/{guest}', [GuestController::class, 'update']);
         Route::delete('/guests/{guest}', [GuestController::class, 'destroy']);
         Route::put('/guest-message', [GuestController::class, 'updateMessage']);
