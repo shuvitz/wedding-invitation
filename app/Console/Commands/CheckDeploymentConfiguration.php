@@ -33,6 +33,13 @@ class CheckDeploymentConfiguration extends Command
             $this->info('APP_URL: OK ('.config('app.url').')');
         }
 
+        if (config('app.env') === 'production' && str_contains((string) config('app.frontend_url'), 'localhost')) {
+            $this->error('FRONTEND_URL is set to a localhost address while APP_ENV=production. Guests\' invitation links are built from it — set it to the deployed Nuxt site.');
+            $failed = true;
+        } else {
+            $this->info('FRONTEND_URL: OK ('.config('app.frontend_url').')');
+        }
+
         $publicLink = public_path('storage');
 
         if (! File::exists($publicLink)) {

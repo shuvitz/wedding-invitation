@@ -43,6 +43,7 @@ Copy `.env.example` to `.env` and set, at minimum:
 | `APP_KEY` | Generate with `php artisan key:generate` — do not reuse the local dev key. |
 | `DB_*` | Your host's MySQL credentials. |
 | `CORS_ALLOWED_ORIGINS` | Comma-separated list including the deployed Nuxt/Netlify URL (e.g. `https://your-site.netlify.app`) — see [CORS](#7-cors) below. |
+| `FRONTEND_URL` | The deployed Nuxt site (e.g. `https://your-site.netlify.app`). Guests' personal invitation links in the admin's Guests page are built from it; `deploy:check` fails if it's still localhost in production. |
 
 ### 4. Database
 

@@ -111,7 +111,7 @@ const navItems = computed(() => {
     ];
 
     if (auth.user?.role === 'admin') {
-        items.push({ label: 'Users', to: '/admin/users' });
+        items.push({ label: 'Guests', to: '/admin/guests' }, { label: 'Users', to: '/admin/users' });
     }
 
     return items;

@@ -11,6 +11,7 @@ const MediaPage = () => import('../pages/MediaPage.vue');
 const PagesPage = () => import('../pages/PagesPage.vue');
 const PageEditorPage = () => import('../pages/PageEditorPage.vue');
 const FormSubmissionsPage = () => import('../pages/FormSubmissionsPage.vue');
+const GuestsPage = () => import('../pages/GuestsPage.vue');
 
 // Layout
 const MainLayout = () => import('../layouts/MainLayout.vue');
@@ -82,6 +83,13 @@ const routes = [
                 path: '/admin/pages/:id/submissions',
                 name: 'admin.pages.submissions',
                 component: FormSubmissionsPage,
+                meta: { adminOnly: true },
+            },
+            {
+                // Names and phone numbers — admin only (GuestPolicy).
+                path: '/admin/guests',
+                name: 'admin.guests',
+                component: GuestsPage,
                 meta: { adminOnly: true },
             },
         ],

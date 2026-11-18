@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FormSubmissionController;
+use App\Http\Controllers\Api\GuestController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\NavigationController;
 use App\Http\Controllers\Api\PageController;
@@ -60,6 +61,12 @@ Route::middleware('web')->group(function () {
         Route::get('/pages/{page}/submissions', [FormSubmissionController::class, 'index']);
         Route::get('/pages/{page}/submissions/export', [FormSubmissionController::class, 'export']);
         Route::delete('/submissions/{submission}', [FormSubmissionController::class, 'destroy']);
+
+        // Guest list — personal data, admin only (see GuestPolicy).
+        Route::get('/guests', [GuestController::class, 'index']);
+        Route::post('/guests', [GuestController::class, 'store']);
+        Route::match(['put', 'patch'], '/guests/{guest}', [GuestController::class, 'update']);
+        Route::delete('/guests/{guest}', [GuestController::class, 'destroy']);
     });
 });
 

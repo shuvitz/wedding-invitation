@@ -14,7 +14,7 @@ class DeploymentCheckCommandTest extends TestCase
 {
     public function test_it_passes_when_configuration_is_valid(): void
     {
-        config(['app.env' => 'production', 'app.url' => 'https://example.com']);
+        config(['app.env' => 'production', 'app.url' => 'https://example.com', 'app.frontend_url' => 'https://site.example.com']);
 
         $files = File::partialMock();
         $files->shouldReceive('exists')->with(public_path('storage'))->andReturn(true);
@@ -26,7 +26,7 @@ class DeploymentCheckCommandTest extends TestCase
 
     public function test_it_fails_when_app_url_is_localhost_in_production(): void
     {
-        config(['app.env' => 'production', 'app.url' => 'http://localhost']);
+        config(['app.env' => 'production', 'app.url' => 'http://localhost', 'app.frontend_url' => 'https://site.example.com']);
 
         $files = File::partialMock();
         $files->shouldReceive('exists')->with(public_path('storage'))->andReturn(true);
@@ -35,6 +35,20 @@ class DeploymentCheckCommandTest extends TestCase
 
         $this->artisan('deploy:check')
             ->expectsOutputToContain('APP_URL is set to a localhost address')
+            ->assertExitCode(1);
+    }
+
+    public function test_it_fails_when_frontend_url_is_localhost_in_production(): void
+    {
+        config(['app.env' => 'production', 'app.url' => 'https://example.com', 'app.frontend_url' => 'http://localhost:3000']);
+
+        $files = File::partialMock();
+        $files->shouldReceive('exists')->with(public_path('storage'))->andReturn(true);
+        $files->shouldReceive('isDirectory')->with(storage_path('app/public'))->andReturn(true);
+        $files->shouldReceive('isWritable')->with(storage_path('app/public'))->andReturn(true);
+
+        $this->artisan('deploy:check')
+            ->expectsOutputToContain('FRONTEND_URL is set to a localhost address')
             ->assertExitCode(1);
     }
 
@@ -52,7 +66,7 @@ class DeploymentCheckCommandTest extends TestCase
 
     public function test_it_fails_when_the_storage_symlink_is_missing(): void
     {
-        config(['app.env' => 'production', 'app.url' => 'https://example.com']);
+        config(['app.env' => 'production', 'app.url' => 'https://example.com', 'app.frontend_url' => 'https://site.example.com']);
 
         $files = File::partialMock();
         $files->shouldReceive('exists')->with(public_path('storage'))->andReturn(false);
@@ -66,7 +80,7 @@ class DeploymentCheckCommandTest extends TestCase
 
     public function test_it_fails_when_the_public_disk_is_not_writable(): void
     {
-        config(['app.env' => 'production', 'app.url' => 'https://example.com']);
+        config(['app.env' => 'production', 'app.url' => 'https://example.com', 'app.frontend_url' => 'https://site.example.com']);
 
         $files = File::partialMock();
         $files->shouldReceive('exists')->with(public_path('storage'))->andReturn(true);

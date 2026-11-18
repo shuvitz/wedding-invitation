@@ -76,6 +76,8 @@ password: password
 
 **Change this password immediately after first login** — it's a known default, not a secret.
 
+The admin's **Guests** page (admin only) keeps the guest list and copies each guest's personal link (`FRONTEND_URL/?to=Name`), which the cover block greets them with.
+
 Migrations + seed produce one admin user plus the demo invitation above (one page and six photos in Media); Navigation is empty. Everything else is created through the admin UI.
 
 ### Environment variables
