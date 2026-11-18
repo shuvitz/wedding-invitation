@@ -1,0 +1,9 @@
+[build]
+  base = "web"
+  command = "npm run build"
+
+# No `publish` directory is set — Nitro's `netlify` preset (see
+# web/nuxt.config.ts) already builds output into the `.netlify/` shape
+# Netlify's own Nuxt/Nitro integration auto-detects, including the SSR
+# function. Nothing else (Docker, edge functions, redirects) is needed for
+# this pilot.

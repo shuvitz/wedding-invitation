@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+/*
+ * A small, generic token set — enough for a clean marketing-site look
+ * without building a theme engine. Deliberately unopinionated (no brand
+ * colors baked in) so this can power a company profile, an event site,
+ * a small business site, etc. purely through CMS content.
+ */
+:root {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --border: oklch(0.922 0 0);
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+    --card: oklch(1 0 0);
+}
+
+@theme inline {
+    --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-card: var(--card);
+}
+
+body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+}
