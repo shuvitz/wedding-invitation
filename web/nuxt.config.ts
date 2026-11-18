@@ -62,8 +62,10 @@ export default defineNuxtConfig({
       apiBaseUrl: apiBaseUrl || 'http://localhost:8000/api/public',
       // BCP 47 locale for formatting dates (e.g. `id` → "Sabtu, 14 Juni
       // 2026"). Fixed rather than the browser's, so SSR and hydration
-      // render the same string. Override with NUXT_PUBLIC_LOCALE.
-      locale: 'en',
+      // render the same string. Override with NUXT_PUBLIC_LOCALE. Defaults
+      // to `id` here (the skeleton uses `en`) so a forgotten env var on
+      // Netlify can't turn the invitation's dates English.
+      locale: 'id',
     },
   },
 });

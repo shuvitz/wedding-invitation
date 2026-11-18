@@ -48,6 +48,13 @@ Copy `.env.example` to `.env` and set, at minimum:
 
 ```bash
 php artisan migrate --force
+php artisan db:seed --class=DemoInvitationSeeder --force   # optional: the fictional demo invitation
+```
+
+Don't run the full `php artisan db:seed` in production: it also creates the `test@example.com` / `password` admin. Create the real admin instead:
+
+```bash
+php artisan tinker --execute="App\Models\User::factory()->admin()->create(['name' => 'Your Name', 'email' => 'you@example.com', 'password' => 'a-long-unique-password'])"
 ```
 
 ### 5. Storage — explicit, required deployment step
@@ -115,6 +122,7 @@ This repo is a monorepo — the Nuxt app lives in `web/`. In Netlify's site sett
 | Variable | Value |
 |---|---|
 | `NUXT_PUBLIC_API_BASE_URL` | The deployed Laravel API's public URL, with `/api/public` appended — e.g. `https://api.yourdomain.com/api/public` |
+| `NUXT_PUBLIC_LOCALE` | Optional. Defaults to `id` in this project; keep it equal to Laravel's `APP_LOCALE`. |
 
 Set this under Netlify's **Site settings → Environment variables**, not committed to the repo. As of Phase B1, **the build fails immediately and clearly** if this is missing (Netlify's build environment sets `NODE_ENV=production` for every build, which trips the check in `web/nuxt.config.ts`) — this replaces the previous silent fallback to `http://localhost:8000/api/public`, which would have deployed a broken site with no build-time warning.
 
