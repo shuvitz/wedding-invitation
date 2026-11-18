@@ -18,6 +18,7 @@ class GuestResource extends JsonResource
             'phone' => $this->phone,
             'notes' => $this->notes,
             'invitation_url' => $this->invitationUrl(),
+            'whatsapp_url' => $this->whatsappUrl(),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

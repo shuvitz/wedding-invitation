@@ -44,6 +44,9 @@
                                 <td class="py-3">
                                     <div class="flex items-center gap-2">
                                         <Button variant="outline" size="sm" @click="copyLink(guest)">Copy Link</Button>
+                                        <Button as="a" :href="guest.whatsapp_url" target="_blank" rel="noopener noreferrer" variant="outline" size="sm">
+                                            WhatsApp
+                                        </Button>
                                         <Button variant="outline" size="sm" @click="openModal(guest)">Edit</Button>
                                         <Button variant="outline" size="sm" class="text-destructive" @click="confirmDelete(guest)">Delete</Button>
                                     </div>

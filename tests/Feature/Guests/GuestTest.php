@@ -34,6 +34,23 @@ class GuestTest extends TestCase
         $this->assertModelMissing($budi);
     }
 
+    public function test_whatsapp_link_uses_an_international_number_and_carries_the_invitation(): void
+    {
+        config(['app.frontend_url' => 'https://undangan.example']);
+
+        $local = Guest::factory()->make(['name' => 'Budi', 'phone' => '0812-3456 7890']);
+        $international = Guest::factory()->make(['name' => 'Ani', 'phone' => '+65 9123 4567']);
+        $noPhone = Guest::factory()->make(['name' => 'Citra', 'phone' => null]);
+
+        $this->assertStringStartsWith('https://wa.me/6281234567890?text=', $local->whatsappUrl());
+        $this->assertStringStartsWith('https://wa.me/6591234567?text=', $international->whatsappUrl());
+        $this->assertStringStartsWith('https://wa.me/?text=', $noPhone->whatsappUrl());
+
+        parse_str(parse_url($local->whatsappUrl(), PHP_URL_QUERY), $query);
+        $this->assertStringContainsString('Kepada Yth. Budi,', $query['text']);
+        $this->assertStringContainsString('https://undangan.example/?to=Budi', $query['text']);
+    }
+
     public function test_guest_fields_are_validated(): void
     {
         $admin = User::factory()->admin()->create();
