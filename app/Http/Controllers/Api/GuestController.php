@@ -11,7 +11,10 @@ use App\Models\Setting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class GuestController extends Controller
 {
@@ -43,6 +46,61 @@ class GuestController extends Controller
 
         return GuestResource::collection($guests)
             ->additional(['meta' => ['message_template' => Guest::messageTemplate()]]);
+    }
+
+    /**
+     * Add guests from a CSV of name, phone, notes (only name required), with
+     * or without a header row, comma- or semicolon-separated (Excel in an
+     * Indonesian locale saves with ";"). Invalid rows are reported, names
+     * already on the list are skipped, and the rest are added together.
+     */
+    public function import(Request $request): JsonResponse
+    {
+        Gate::authorize('manage', Guest::class);
+
+        $request->validate(['file' => ['required', 'file', 'mimes:csv,txt', 'max:1024']]);
+
+        // shortcut: splits on newlines before parsing, so a quoted cell containing a line break breaks that row; use a stream CSV reader if notes ever span lines.
+        $lines = preg_split('/\r\n|\r|\n/', preg_replace('/^\xEF\xBB\xBF/', '', $request->file('file')->get()));
+        $delimiter = substr_count($lines[0], ';') > substr_count($lines[0], ',') ? ';' : ',';
+
+        $existing = Guest::pluck('name')->map(fn (string $name) => mb_strtolower($name))->flip();
+        $rows = [];
+        $errors = [];
+        $duplicates = 0;
+
+        foreach ($lines as $index => $line) {
+            $cells = array_map('trim', str_getcsv($line, $delimiter));
+            if (implode('', $cells) === '' || ($index === 0 && in_array(mb_strtolower($cells[0]), ['nama', 'name'], true))) {
+                continue;
+            }
+
+            $row = ['name' => $cells[0], 'phone' => ($cells[1] ?? '') ?: null, 'notes' => ($cells[2] ?? '') ?: null];
+            $validator = Validator::make($row, SaveGuestRequest::fieldRules());
+            if ($validator->fails()) {
+                $errors[] = ['row' => $index + 1, 'message' => $validator->errors()->first()];
+                continue;
+            }
+
+            if ($existing->has($key = mb_strtolower($row['name']))) {
+                $duplicates++;
+                continue;
+            }
+
+            $existing[$key] = true;
+            $rows[] = $row;
+        }
+
+        if (count($rows) > 2000) {
+            throw ValidationException::withMessages(['file' => __('Import at most 2000 guests at a time.')]);
+        }
+
+        DB::transaction(fn () => collect($rows)->each(fn (array $row) => Guest::create($row)));
+
+        return response()->json([
+            'data' => ['created' => count($rows), 'duplicates' => $duplicates, 'errors' => $errors],
+            'message' => 'ok',
+        ]);
     }
 
     /**

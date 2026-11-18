@@ -20,6 +20,16 @@ class SaveGuestRequest extends FormRequest
      */
     public function rules(): array
     {
+        return self::fieldRules();
+    }
+
+    /**
+     * Also used per row by the CSV import.
+     *
+     * @return array<string, mixed>
+     */
+    public static function fieldRules(): array
+    {
         return [
             'name' => ['required', 'string', 'max:100'],
             'phone' => ['nullable', 'string', 'max:30', 'regex:/^\+?[0-9][0-9 \-]*$/'],

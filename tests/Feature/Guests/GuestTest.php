@@ -7,6 +7,7 @@ use App\Models\Guest;
 use App\Models\Page;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class GuestTest extends TestCase
@@ -43,6 +44,8 @@ class GuestTest extends TestCase
         $local = Guest::factory()->make(['name' => 'Budi', 'phone' => '0812-3456 7890']);
         $international = Guest::factory()->make(['name' => 'Ani', 'phone' => '+65 9123 4567']);
         $noPhone = Guest::factory()->make(['name' => 'Citra', 'phone' => null]);
+        $excelStripped = Guest::factory()->make(['name' => 'Dodi', 'phone' => '81234567890']);
+        $this->assertStringStartsWith('https://wa.me/6281234567890?text=', $excelStripped->whatsappUrl());
 
         $this->assertStringStartsWith('https://wa.me/6281234567890?text=', $local->whatsappUrl());
         $this->assertStringStartsWith('https://wa.me/6591234567?text=', $international->whatsappUrl());
@@ -94,6 +97,43 @@ class GuestTest extends TestCase
 
         $this->actingAs($admin)->putJson('/api/guest-message', ['message' => null])
             ->assertOk()->assertJsonPath('data.message_template', Guest::DEFAULT_MESSAGE);
+    }
+
+    public function test_admin_can_import_guests_from_csv(): void
+    {
+        $admin = User::factory()->admin()->create();
+        Guest::factory()->create(['name' => 'Budi Santoso']);
+
+        $csv = "\xEF\xBB\xBFNama;No HP;Catatan\r\n"
+            ."Ani Wijaya;0812-1111-2222;Teman kuliah\r\n"
+            ."budi santoso;;\r\n"                       // already on the list
+            ."\"Citra; & Keluarga\";;Keluarga\r\n"      // quoted delimiter
+            .";0812;\r\n"                               // no name
+            ."Dodi;call me;\r\n"                        // bad phone
+            ."\r\n"
+            ."Ani Wijaya;;\r\n";                        // repeated within the file
+
+        $this->actingAs($admin)
+            ->post('/api/guests/import', ['file' => UploadedFile::fake()->createWithContent('tamu.csv', $csv)], ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertJsonPath('data.created', 2)
+            ->assertJsonPath('data.duplicates', 2)
+            ->assertJsonPath('data.errors.0.row', 5)
+            ->assertJsonPath('data.errors.1.row', 6);
+
+        $this->assertSame(['Ani Wijaya', 'Budi Santoso', 'Citra; & Keluarga'], Guest::orderBy('name')->pluck('name')->all());
+        $this->assertSame('0812-1111-2222', Guest::where('name', 'Ani Wijaya')->value('phone'));
+    }
+
+    public function test_import_without_header_and_comma_separated(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $editor = User::factory()->create();
+        $file = fn () => UploadedFile::fake()->createWithContent('tamu.csv', "Ani,0812,\nBudi\n");
+
+        $this->actingAs($editor)->post('/api/guests/import', ['file' => $file()], ['Accept' => 'application/json'])->assertForbidden();
+        $this->actingAs($admin)->post('/api/guests/import', ['file' => $file()], ['Accept' => 'application/json'])
+            ->assertOk()->assertJsonPath('data.created', 2);
     }
 
     public function test_guest_fields_are_validated(): void

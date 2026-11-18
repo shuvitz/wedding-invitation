@@ -39,9 +39,10 @@ class Guest extends Model
      */
     public function whatsappUrl(): string
     {
-        // Digits only, and a local "08…" number becomes "628…" (wa.me needs the country code).
-        // shortcut: assumes Indonesian numbers for the leading-0 case; foreign guests need a "+<code>" number.
-        $phone = preg_replace('/^0/', '62', preg_replace('/\D/', '', (string) $this->phone));
+        // Digits only, and a local "08…" number becomes "628…" (wa.me needs the country code). A bare
+        // "8…" is "08…" with the 0 dropped, which Excel does to numbers in imported CSVs.
+        // shortcut: assumes Indonesian numbers in both cases; foreign guests need a "+<code>" number.
+        $phone = preg_replace('/^0|^(?=8)/', '62', preg_replace('/\D/', '', (string) $this->phone));
 
         $message = strtr(self::messageTemplate(), ['{nama}' => $this->name, '{link}' => $this->invitationUrl()]);
 

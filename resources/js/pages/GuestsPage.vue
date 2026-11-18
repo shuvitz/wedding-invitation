@@ -8,7 +8,37 @@
                     Each guest gets a personal invitation link that greets them by name on the cover.
                 </p>
             </div>
-            <Button @click="openModal(null)">New Guest</Button>
+            <div class="flex gap-2">
+                <input ref="importInput" type="file" accept=".csv,text/csv" class="hidden" @change="importCsv">
+                <Button variant="outline" :disabled="isImporting" @click="importInput.click()">
+                    {{ isImporting ? 'Importing…' : 'Import CSV' }}
+                </Button>
+                <Button @click="openModal(null)">New Guest</Button>
+            </div>
+        </div>
+
+        <p class="-mt-4 text-xs text-muted-foreground">
+            CSV columns: name, phone, notes (only name is required; a header row is optional; comma or semicolon separated).
+            <a :href="sampleCsv" download="contoh-daftar-tamu.csv" class="underline">Download a sample</a>.
+        </p>
+
+        <!-- Import result -->
+        <div v-if="importResult" class="rounded-lg border border-border bg-card p-4 text-sm" role="status">
+            <div class="flex items-start justify-between gap-4">
+                <p class="text-foreground">
+                    Added {{ importResult.created }} guest{{ importResult.created === 1 ? '' : 's' }}.
+                    <span v-if="importResult.duplicates" class="text-muted-foreground">
+                        Skipped {{ importResult.duplicates }} already on the list.
+                    </span>
+                </p>
+                <Button variant="outline" size="sm" @click="importResult = null">Dismiss</Button>
+            </div>
+            <div v-if="importResult.errors.length" class="mt-3 space-y-1 text-destructive">
+                <p class="font-medium">{{ importResult.errors.length }} row{{ importResult.errors.length === 1 ? '' : 's' }} not imported:</p>
+                <ul class="list-inside list-disc text-xs">
+                    <li v-for="error in importResult.errors" :key="error.row">Row {{ error.row }}: {{ error.message }}</li>
+                </ul>
+            </div>
         </div>
 
         <Card>
@@ -187,6 +217,32 @@ function onSearchInput() {
 }
 
 onMounted(fetchGuests);
+
+// ── CSV import ───────────────────────────────────────
+const importInput = ref(null);
+const isImporting = ref(false);
+const importResult = ref(null);
+const sampleCsv = 'data:text/csv;charset=utf-8,' + encodeURIComponent(
+    'Nama;No HP;Catatan\nBudi Santoso & Keluarga;0812-0000-0000;Teman kantor\nAni Wijaya;;Keluarga\n',
+);
+
+async function importCsv(event) {
+    const file = event.target.files[0];
+    event.target.value = ''; // so picking the same file again still fires `change`
+    if (!file) return;
+
+    isImporting.value = true;
+    importResult.value = null;
+    try {
+        const { data } = await guestsApi.import(file);
+        importResult.value = data.data;
+        await fetchGuests();
+    } catch (error) {
+        ui.showToast(error.response?.data?.errors?.file?.[0] ?? error.response?.data?.message ?? 'Could not import the file.', 'error');
+    } finally {
+        isImporting.value = false;
+    }
+}
 
 // ── WhatsApp message ─────────────────────────────────
 const savedMessage = ref('');

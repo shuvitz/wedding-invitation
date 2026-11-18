@@ -65,6 +65,7 @@ Route::middleware('web')->group(function () {
         // Guest list — personal data, admin only (see GuestPolicy).
         Route::get('/guests', [GuestController::class, 'index']);
         Route::post('/guests', [GuestController::class, 'store']);
+        Route::post('/guests/import', [GuestController::class, 'import']);
         Route::match(['put', 'patch'], '/guests/{guest}', [GuestController::class, 'update']);
         Route::delete('/guests/{guest}', [GuestController::class, 'destroy']);
         Route::put('/guest-message', [GuestController::class, 'updateMessage']);

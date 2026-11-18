@@ -76,7 +76,7 @@ password: password
 
 **Change this password immediately after first login** — it's a known default, not a secret.
 
-The admin's **Guests** page (admin only) keeps the guest list and copies each guest's personal link (`FRONTEND_URL/?to=Name`) or opens WhatsApp with the invitation message ready to send (the text is editable on the same page, with `{nama}` and `{link}` placeholders). The cover block greets them by that name.
+The admin's **Guests** page (admin only) keeps the guest list (added one by one or imported from a CSV of name, phone, notes) and copies each guest's personal link (`FRONTEND_URL/?to=Name`) or opens WhatsApp with the invitation message ready to send (the text is editable on the same page, with `{nama}` and `{link}` placeholders). The cover block greets them by that name.
 
 Migrations + seed produce one admin user plus the demo invitation above (one page and six photos in Media); Navigation is empty. Everything else is created through the admin UI.
 

@@ -17,6 +17,12 @@ export const guestsApi = {
         return http.delete(`/guests/${id}`);
     },
 
+    import(file) {
+        const form = new FormData();
+        form.append('file', file);
+        return http.post('/guests/import', form);
+    },
+
     // null restores the default text.
     updateMessage(message) {
         return http.put('/guest-message', { message });
