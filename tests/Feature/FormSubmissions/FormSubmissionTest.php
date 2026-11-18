@@ -80,6 +80,23 @@ class FormSubmissionTest extends TestCase
         $this->assertDatabaseCount('form_submissions', 0);
     }
 
+    public function test_validation_errors_are_in_indonesian_and_name_fields_by_their_label(): void
+    {
+        app()->setLocale('id');
+        $this->publishedPageWithForm();
+
+        $this->postJson('/api/public/pages/wedding/forms/rsvp', [
+            'attendance' => 'Maybe',
+            'guests' => 'banyak',
+            'message' => str_repeat('a', 5001),
+        ])->assertStatus(422)
+            ->assertJsonPath('errors.name.0', 'Nama wajib diisi.')
+            ->assertJsonPath('errors.attendance.0', 'Pilihan Kehadiran tidak valid.')
+            ->assertJsonPath('errors.guests.0', 'Jumlah tamu harus berupa angka.')
+            ->assertJsonPath('errors.message.0', 'Ucapan maksimal 5000 karakter.')
+            ->assertJsonPath('message', 'Nama wajib diisi. (dan 3 kesalahan lainnya)');
+    }
+
     public function test_draft_page_missing_page_and_unknown_form_all_404(): void
     {
         Page::factory()->create(['slug' => 'draft', 'content' => ['blocks' => [$this->rsvpBlock()]]]);

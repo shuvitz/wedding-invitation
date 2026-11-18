@@ -53,7 +53,7 @@
 
             <!-- Honeypot: hidden from people and screen readers; bots that fill it are dropped server-side. -->
             <div class="absolute -left-[9999px]" aria-hidden="true">
-                <label :for="inputId('_hp')">Leave this empty</label>
+                <label :for="inputId('_hp')">Biarkan kosong</label>
                 <input :id="inputId('_hp')" v-model="honeypot" type="text" tabindex="-1" autocomplete="off">
             </div>
 
@@ -64,7 +64,7 @@
                 :disabled="isSubmitting"
                 class="inline-flex w-full items-center justify-center rounded-md bg-primary px-6 py-2 text-sm font-medium text-primary-foreground shadow transition hover:bg-primary/90 disabled:opacity-50"
             >
-                {{ data.submit_label || 'Send' }}
+                {{ data.submit_label || 'Kirim' }}
             </button>
         </form>
     </section>
@@ -105,9 +105,9 @@ async function submit() {
         if (status === 422) {
             errors.value = error.data?.errors ?? {};
         } else if (status === 429) {
-            generalError.value = 'Too many attempts. Please try again in a minute.';
+            generalError.value = 'Terlalu banyak percobaan. Silakan coba lagi sebentar lagi.';
         } else {
-            generalError.value = 'Something went wrong. Please try again.';
+            generalError.value = 'Terjadi kesalahan. Silakan coba lagi.';
         }
     } finally {
         isSubmitting.value = false;

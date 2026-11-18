@@ -33,7 +33,7 @@ class FormSubmissionController extends Controller
         abort_if($form === null, 404);
 
         $response = response()->json([
-            'message' => ($form['success_message'] ?? null) ?: 'Thank you!',
+            'message' => ($form['success_message'] ?? null) ?: __('Thank you!'),
         ], 201);
 
         // Honeypot: a hidden input real visitors never fill. Bots get the
@@ -42,7 +42,13 @@ class FormSubmissionController extends Controller
             return $response;
         }
 
-        $data = $request->validate(BlockRegistry::submissionRules($form['fields'] ?? []));
+        // Errors name fields by the label guests see ("Jumlah Tamu"), not
+        // the internal field name ("jumlah_tamu").
+        $data = $request->validate(
+            BlockRegistry::submissionRules($form['fields'] ?? []),
+            [],
+            collect($form['fields'] ?? [])->pluck('label', 'name')->all(),
+        );
 
         FormSubmission::create([
             'page_id' => $page->id,
