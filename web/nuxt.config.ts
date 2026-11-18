@@ -37,6 +37,18 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/app.css'],
 
+  // Theme fonts (see assets/css/app.css). `display=swap` shows fallback
+  // text immediately instead of blank text while the fonts load.
+  app: {
+    head: {
+      link: [
+        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Great+Vibes&display=swap' },
+      ],
+    },
+  },
+
   vite: {
     plugins: [tailwindcss()],
   },

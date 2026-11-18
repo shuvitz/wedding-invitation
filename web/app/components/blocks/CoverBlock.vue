@@ -18,7 +18,7 @@
             <div v-if="data.image_url" class="absolute inset-0 bg-background/70" aria-hidden="true" />
             <div class="relative space-y-4">
                 <p v-if="data.title" class="text-sm uppercase tracking-widest text-muted-foreground">{{ data.title }}</p>
-                <h1 id="cover-names" class="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">{{ data.names }}</h1>
+                <h1 id="cover-names" class="font-script text-5xl font-normal text-foreground sm:text-7xl">{{ data.names }}</h1>
                 <div v-if="guest" class="space-y-1 pt-4">
                     <p v-if="data.greeting" class="text-sm text-muted-foreground">{{ data.greeting }}</p>
                     <p class="text-xl font-semibold text-foreground">{{ guest }}</p>

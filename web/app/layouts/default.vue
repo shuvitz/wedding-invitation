@@ -53,7 +53,10 @@ const socialLinks = computed(() => {
         .map((platform) => ({ platform: platform.charAt(0).toUpperCase() + platform.slice(1), value: social[platform] }));
 });
 
+const locale = useRuntimeConfig().public.locale;
+
 useHead(() => ({
+    htmlAttrs: { lang: locale },
     link: settings.value?.site_identity.favicon
         ? [{ rel: 'icon', href: settings.value.site_identity.favicon.url }]
         : [],

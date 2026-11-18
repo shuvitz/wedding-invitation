@@ -1,24 +1,26 @@
 @import "tailwindcss";
 
 /*
- * A small, generic token set — enough for a clean marketing-site look
- * without building a theme engine. Deliberately unopinionated (no brand
- * colors baked in) so this can power a company profile, an event site,
- * a small business site, etc. purely through CMS content.
+ * Wedding theme: warm ivory paper, deep brown ink, sage accent. Text
+ * pairs (foreground/muted-foreground on background or card, and
+ * primary-foreground on primary) all stay above WCAG AA 4.5:1.
+ * Fonts are loaded in nuxt.config.ts (app.head).
  */
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --border: oklch(0.922 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --card: oklch(1 0 0);
+    --background: oklch(0.985 0.01 85);
+    --foreground: oklch(0.27 0.02 60);
+    --muted: oklch(0.95 0.015 85);
+    --muted-foreground: oklch(0.48 0.03 60);
+    --border: oklch(0.88 0.03 80);
+    --primary: oklch(0.45 0.06 140);
+    --primary-foreground: oklch(0.985 0.01 85);
+    --card: oklch(0.995 0.005 85);
 }
 
 @theme inline {
     --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-serif: "Cormorant Garamond", ui-serif, Georgia, serif;
+    --font-script: "Great Vibes", "Cormorant Garamond", cursive;
     --color-background: var(--background);
     --color-foreground: var(--foreground);
     --color-muted: var(--muted);
@@ -32,4 +34,11 @@
 body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+}
+
+/* Every block's headings get the serif without touching each component. */
+@layer base {
+    h1, h2, h3 {
+        font-family: var(--font-serif);
+    }
 }
