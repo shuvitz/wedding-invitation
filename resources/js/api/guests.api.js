@@ -16,4 +16,9 @@ export const guestsApi = {
     remove(id) {
         return http.delete(`/guests/${id}`);
     },
+
+    // null restores the default text.
+    updateMessage(message) {
+        return http.put('/guest-message', { message });
+    },
 };

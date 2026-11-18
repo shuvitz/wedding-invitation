@@ -67,6 +67,7 @@ Route::middleware('web')->group(function () {
         Route::post('/guests', [GuestController::class, 'store']);
         Route::match(['put', 'patch'], '/guests/{guest}', [GuestController::class, 'update']);
         Route::delete('/guests/{guest}', [GuestController::class, 'destroy']);
+        Route::put('/guest-message', [GuestController::class, 'updateMessage']);
     });
 });
 

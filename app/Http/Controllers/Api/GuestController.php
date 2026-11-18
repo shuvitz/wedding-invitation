@@ -7,6 +7,7 @@ use App\Http\Requests\Guests\SaveGuestRequest;
 use App\Http\Resources\GuestResource;
 use App\Models\FormSubmission;
 use App\Models\Guest;
+use App\Models\Setting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -40,7 +41,30 @@ class GuestController extends Controller
 
         $guests->each(fn (Guest $guest) => $guest->setRelation('reply', $replies->get($key($guest->name))));
 
-        return GuestResource::collection($guests);
+        return GuestResource::collection($guests)
+            ->additional(['meta' => ['message_template' => Guest::messageTemplate()]]);
+    }
+
+    /**
+     * Save the WhatsApp invitation text. Null/empty restores the default.
+     */
+    public function updateMessage(Request $request): JsonResponse
+    {
+        Gate::authorize('manage', Guest::class);
+
+        $data = $request->validate(
+            ['message' => ['nullable', 'string', 'max:2000', 'regex:/\{link\}/']],
+            ['message.regex' => __('The message must contain {link}, or guests get no invitation link.')],
+        );
+
+        $setting = Setting::current();
+        $setting->guest_message = $data['message'] ?? null;
+        $setting->save();
+
+        return response()->json([
+            'data' => ['message_template' => $setting->guest_message ?: Guest::DEFAULT_MESSAGE],
+            'message' => 'ok',
+        ]);
     }
 
     public function store(SaveGuestRequest $request): JsonResponse

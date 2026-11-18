@@ -74,6 +74,28 @@ class GuestTest extends TestCase
             ->assertJsonPath('data.1.reply', null);
     }
 
+    public function test_admin_can_edit_and_reset_the_whatsapp_message(): void
+    {
+        config(['app.frontend_url' => 'https://undangan.example']);
+        $admin = User::factory()->admin()->create();
+        $editor = User::factory()->create();
+
+        $this->actingAs($admin)->putJson('/api/guest-message', ['message' => 'Halo {nama}'])
+            ->assertStatus(422)->assertJsonValidationErrors(['message']);
+        $this->actingAs($editor)->putJson('/api/guest-message', ['message' => 'Halo {link}'])
+            ->assertForbidden();
+
+        $this->actingAs($admin)->putJson('/api/guest-message', ['message' => 'Halo {nama}, ini undangannya: {link}'])
+            ->assertOk()->assertJsonPath('data.message_template', 'Halo {nama}, ini undangannya: {link}');
+
+        $url = Guest::factory()->make(['name' => 'Budi'])->whatsappUrl();
+        parse_str(parse_url($url, PHP_URL_QUERY), $query);
+        $this->assertSame('Halo Budi, ini undangannya: https://undangan.example/?to=Budi', $query['text']);
+
+        $this->actingAs($admin)->putJson('/api/guest-message', ['message' => null])
+            ->assertOk()->assertJsonPath('data.message_template', Guest::DEFAULT_MESSAGE);
+    }
+
     public function test_guest_fields_are_validated(): void
     {
         $admin = User::factory()->admin()->create();

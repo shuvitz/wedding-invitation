@@ -83,6 +83,28 @@
             </CardContent>
         </Card>
 
+        <!-- WhatsApp message template -->
+        <Card>
+            <CardHeader>
+                <CardTitle>WhatsApp Message</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <form class="space-y-3" @submit.prevent="saveMessage(messageDraft)">
+                    <Textarea id="guest-message" v-model="messageDraft" rows="8" maxlength="2000" aria-describedby="guest-message-help" />
+                    <p id="guest-message-help" class="text-xs text-muted-foreground">
+                        <code>{nama}</code> becomes the guest's name and <code>{link}</code> their personal invitation link. <code>{link}</code> is required.
+                    </p>
+                    <p v-if="messageError" class="text-xs text-destructive">{{ messageError }}</p>
+                    <div class="flex justify-end gap-2">
+                        <Button type="button" variant="outline" :disabled="isSavingMessage" @click="resetMessage">Reset to Default</Button>
+                        <Button type="submit" :disabled="isSavingMessage || messageDraft === savedMessage">
+                            {{ isSavingMessage ? 'Saving…' : 'Save Message' }}
+                        </Button>
+                    </div>
+                </form>
+            </CardContent>
+        </Card>
+
         <!-- Create / edit modal -->
         <div v-if="showModal" class="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4" @click.self="closeModal">
             <Card class="w-full max-w-md">
@@ -136,6 +158,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 const ui = useUiStore();
 
@@ -148,6 +171,8 @@ async function fetchGuests() {
     try {
         const { data } = await guestsApi.list(search.value ? { search: search.value } : {});
         guests.value = data.data;
+        savedMessage.value = data.meta.message_template;
+        messageDraft.value ??= savedMessage.value;
     } catch (error) {
         ui.showToast(error.response?.data?.message ?? 'Could not load guests.', 'error');
     } finally {
@@ -162,6 +187,33 @@ function onSearchInput() {
 }
 
 onMounted(fetchGuests);
+
+// ── WhatsApp message ─────────────────────────────────
+const savedMessage = ref('');
+const messageDraft = ref(null);
+const messageError = ref('');
+const isSavingMessage = ref(false);
+
+async function saveMessage(message) {
+    isSavingMessage.value = true;
+    messageError.value = '';
+    try {
+        await guestsApi.updateMessage(message);
+        messageDraft.value = null; // take the saved text from the refetch
+        await fetchGuests(); // every guest's WhatsApp link carries the new text
+        ui.showToast('WhatsApp message saved.', 'success');
+    } catch (error) {
+        messageError.value = error.response?.data?.errors?.message?.[0] ?? error.response?.data?.message ?? 'Could not save the message.';
+    } finally {
+        isSavingMessage.value = false;
+    }
+}
+
+function resetMessage() {
+    if (window.confirm('Replace the message with the default text?')) {
+        saveMessage(null);
+    }
+}
 
 // ── RSVP ─────────────────────────────────────────────
 const replyFilter = ref('all');
