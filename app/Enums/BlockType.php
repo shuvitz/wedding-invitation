@@ -14,4 +14,5 @@ enum BlockType: string
     case Form = 'form';
     case Couple = 'couple';
     case Gift = 'gift';
+    case Cover = 'cover';
 }

@@ -40,7 +40,7 @@ class StorePageRequest extends FormRequest
             'meta_title'        => ['sometimes', 'nullable', 'string', 'max:255'],
             'meta_description'  => ['sometimes', 'nullable', 'string', 'max:255'],
             'content'           => ['sometimes', 'array'],
-            'content.blocks'    => ['sometimes', 'array', BlockRegistry::uniqueFormKeysRule()],
+            'content.blocks'    => ['sometimes', 'array', BlockRegistry::uniqueFormKeysRule(), BlockRegistry::singleCoverRule()],
             'content.blocks.*.type' => ['required_with:content.blocks', Rule::in(BlockRegistry::types())],
         ];
 

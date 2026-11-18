@@ -132,6 +132,14 @@ class BlockRegistry
                 "{$prefix}.items.*.account_number" => ['required', 'string', 'max:50', 'regex:/^[0-9][0-9 \-]*$/'],
                 "{$prefix}.items.*.account_name" => ['required', 'string', 'max:255'],
             ],
+            // The guest's name isn't stored: renderers read it from `?to=`.
+            BlockType::Cover => [
+                "{$prefix}.title" => ['nullable', 'string', 'max:255'],
+                "{$prefix}.names" => ['required', 'string', 'max:255'],
+                "{$prefix}.greeting" => ['nullable', 'string', 'max:255'],
+                "{$prefix}.button_label" => ['nullable', 'string', 'max:100'],
+                "{$prefix}.image_media_id" => ['nullable', 'integer', 'exists:media,id'],
+            ],
             default => [],
         };
     }
@@ -158,6 +166,7 @@ class BlockRegistry
             BlockType::Form => null,
             BlockType::Couple => 'public.blocks.couple',
             BlockType::Gift => 'public.blocks.gift',
+            BlockType::Cover => 'public.blocks.cover',
             default => null,
         };
     }
@@ -260,6 +269,13 @@ class BlockRegistry
                     'account_name' => $item['account_name'] ?? null,
                 ], $data['items'] ?? [])),
             ]],
+            BlockType::Cover => ['type' => 'cover', 'data' => [
+                'title' => $data['title'] ?? null,
+                'names' => $data['names'] ?? null,
+                'greeting' => $data['greeting'] ?? null,
+                'button_label' => $data['button_label'] ?? null,
+                ...self::resolveImageFields($data['image_media_id'] ?? null, 'image_url'),
+            ]],
             default => null,
         };
     }
@@ -280,6 +296,22 @@ class BlockRegistry
 
             if ($keys->count() !== $keys->unique()->count()) {
                 $fail('Each form block on a page needs its own form key.');
+            }
+        };
+    }
+
+    /**
+     * Rule for a page's whole `content.blocks` array: at most one `cover`
+     * block, since Nuxt shows it as a full-screen overlay.
+     */
+    public static function singleCoverRule(): \Closure
+    {
+        return function (string $attribute, mixed $blocks, \Closure $fail) {
+            $covers = collect(is_array($blocks) ? $blocks : [])
+                ->filter(fn ($block) => is_array($block) && ($block['type'] ?? null) === BlockType::Cover->value);
+
+            if ($covers->count() > 1) {
+                $fail('A page can have only one cover block.');
             }
         };
     }

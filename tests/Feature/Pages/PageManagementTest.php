@@ -366,6 +366,32 @@ class PageManagementTest extends TestCase
         ]);
     }
 
+    public function test_cover_block_requires_names(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)->postJson('/api/pages', [
+            'title' => 'Cover Page',
+            'content' => ['blocks' => [['type' => 'cover', 'data' => ['names' => 'Raka & Sekar', 'greeting' => 'Kepada Yth.']]]],
+        ])->assertCreated();
+
+        $this->actingAs($admin)->postJson('/api/pages', [
+            'title' => 'Bad Cover',
+            'content' => ['blocks' => [['type' => 'cover', 'data' => ['title' => 'The Wedding of']]]],
+        ])->assertStatus(422)->assertJsonValidationErrors(['content.blocks.0.data.names']);
+    }
+
+    public function test_page_rejects_more_than_one_cover_block(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $cover = ['type' => 'cover', 'data' => ['names' => 'Raka & Sekar']];
+
+        $this->actingAs($admin)->postJson('/api/pages', [
+            'title' => 'Two Covers',
+            'content' => ['blocks' => [$cover, $cover]],
+        ])->assertStatus(422)->assertJsonValidationErrors(['content.blocks']);
+    }
+
     public function test_gallery_block_accepts_valid_items(): void
     {
         $admin = User::factory()->admin()->create();

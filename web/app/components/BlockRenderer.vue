@@ -19,12 +19,13 @@
             <FormBlock v-else-if="block.type === 'form'" :data="block.data as FormBlockData" :page-slug="pageSlug" />
             <CoupleBlock v-else-if="block.type === 'couple'" :data="block.data as CoupleBlockData" />
             <GiftBlock v-else-if="block.type === 'gift'" :data="block.data as GiftBlockData" />
+            <CoverBlock v-else-if="block.type === 'cover'" :data="block.data as CoverBlockData" />
         </template>
     </div>
 </template>
 
 <script setup lang="ts">
-import type { CoupleBlockData, CtaBlockData, FormBlockData, GalleryBlockData, GiftBlockData, HeroBlockData, ImageBlockData, MenuBlockData, PageBlock, RichTextBlockData, ScheduleBlockData } from '~/types/cms';
+import type { CoupleBlockData, CoverBlockData, CtaBlockData, FormBlockData, GalleryBlockData, GiftBlockData, HeroBlockData, ImageBlockData, MenuBlockData, PageBlock, RichTextBlockData, ScheduleBlockData } from '~/types/cms';
 import HeroBlock from './blocks/HeroBlock.vue';
 import RichTextBlock from './blocks/RichTextBlock.vue';
 import ImageBlock from './blocks/ImageBlock.vue';
@@ -35,6 +36,7 @@ import ScheduleBlock from './blocks/ScheduleBlock.vue';
 import FormBlock from './blocks/FormBlock.vue';
 import CoupleBlock from './blocks/CoupleBlock.vue';
 import GiftBlock from './blocks/GiftBlock.vue';
+import CoverBlock from './blocks/CoverBlock.vue';
 
 // `pageSlug` is only used by form blocks, to build their submit URL.
 defineProps<{ blocks: PageBlock[]; pageSlug: string }>();

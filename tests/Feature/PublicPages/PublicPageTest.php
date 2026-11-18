@@ -233,6 +233,29 @@ class PublicPageTest extends TestCase
         $response->assertSee(Storage::disk($media->disk)->url($media->path), false);
     }
 
+    public function test_cover_block_greets_the_guest_from_the_to_query_escaped(): void
+    {
+        Page::factory()->published()->create([
+            'slug' => 'cover-blade',
+            'content' => ['blocks' => [
+                ['type' => 'cover', 'data' => ['title' => 'The Wedding of', 'names' => 'Raka & Sekar', 'greeting' => 'Kepada Yth.']],
+            ]],
+        ]);
+
+        $this->get('/cover-blade?to=Budi+Santoso')
+            ->assertOk()
+            ->assertSeeInOrder(['The Wedding of', 'Raka &amp; Sekar', 'Kepada Yth.', 'Budi Santoso', 'Buka Undangan'], false);
+
+        $this->get('/cover-blade?to='.urlencode('<script>alert(1)</script>'))
+            ->assertOk()
+            ->assertDontSee('<script>alert(1)</script>', false)
+            ->assertSee('&lt;script&gt;alert(1)&lt;/script&gt;', false);
+
+        // No guest → no greeting line; an array `to` is ignored, not an error.
+        $this->get('/cover-blade')->assertOk()->assertDontSee('Kepada Yth.');
+        $this->get('/cover-blade?to[]=x')->assertOk()->assertDontSee('Kepada Yth.');
+    }
+
     public function test_gift_block_renders_accounts(): void
     {
         Page::factory()->published()->create([

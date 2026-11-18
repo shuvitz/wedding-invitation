@@ -227,6 +227,25 @@ class PublicApiTest extends TestCase
             ->assertJsonMissingPath('data.content.blocks.0.data.items.0.image_media_id');
     }
 
+    public function test_public_page_resolves_cover_image_and_excludes_media_id(): void
+    {
+        $media = Media::factory()->create();
+        Page::factory()->published()->create([
+            'slug' => 'cover-page',
+            'content' => ['blocks' => [
+                ['type' => 'cover', 'data' => ['title' => 'The Wedding of', 'names' => 'Raka & Sekar', 'image_media_id' => $media->id]],
+            ]],
+        ]);
+
+        $this->getJson('/api/public/pages/cover-page')
+            ->assertOk()
+            ->assertJsonPath('data.content.blocks.0.type', 'cover')
+            ->assertJsonPath('data.content.blocks.0.data.names', 'Raka & Sekar')
+            ->assertJsonPath('data.content.blocks.0.data.greeting', null)
+            ->assertJsonPath('data.content.blocks.0.data.image_url', Storage::disk($media->disk)->url($media->path))
+            ->assertJsonMissingPath('data.content.blocks.0.data.image_media_id');
+    }
+
     public function test_public_page_returns_gift_accounts(): void
     {
         $account = ['bank' => 'BCA', 'account_number' => '1234 5678 90', 'account_name' => 'Raka Pratama'];

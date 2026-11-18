@@ -14,7 +14,7 @@ This is a **starter/skeleton repository** — it ships with the CMS itself (user
 - **Navigation** — a flat, ordered list of menu links
 - **Media library** — image uploads (JPEG/PNG/WebP/GIF), stored via Laravel's Filesystem abstraction, with reference protection (an image in use by a page or Settings can't be deleted)
 - **Pages** — draft/published workflow, one page can be designated the homepage, structured JSON content made of a fixed set of blocks:
-  - `hero`, `rich_text`, `image`, `cta`, `menu` (e.g. a priced item list), `gallery`, `schedule` (dated events with time, venue and a maps link; dates render in `APP_LOCALE` / `NUXT_PUBLIC_LOCALE`), `form` (visitor form such as an RSVP or contact form — rendered by Nuxt only, not the Blade baseline), `couple` (the two people being married: name, parents, photo and Instagram username), `gift` (digital envelope: bank or e-wallet accounts with a copy button)
+  - `hero`, `rich_text`, `image`, `cta`, `menu` (e.g. a priced item list), `gallery`, `schedule` (dated events with time, venue and a maps link; dates render in `APP_LOCALE` / `NUXT_PUBLIC_LOCALE`), `form` (visitor form such as an RSVP or contact form — rendered by Nuxt only, not the Blade baseline), `couple` (the two people being married: name, parents, photo and Instagram username), `gift` (digital envelope: bank or e-wallet accounts with a copy button), `cover` (full-screen opener that greets the guest from `?to=Guest+Name`; one per page)
 - **Form submissions** — visitors submit a published page's `form` block; Laravel validates against the field list stored on the page (text, long text, number, dropdown), rate-limits per IP (5/min, 50/day) and drops honeypot bots. Admins (not editors — it's personal data) view, delete and export them as CSV from the page editor's **Submissions** button. Deleting a page deletes its submissions.
 - **Public API** (`/api/public/*`) — unauthenticated, read-only except the one form-submission `POST`, exposes only published content and never internal fields (no user info, no draft content, no admin IDs)
 - **Nuxt public frontend** — real server-side rendering (not a client-only SPA), SEO metadata (title/description/canonical/OpenGraph/Twitter), image dimensions + lazy loading
@@ -115,7 +115,7 @@ The admin SPA is reached through Laravel (`http://localhost:8000/login`, `/admin
 
 1. Log in to the admin SPA (`/login`) with the seeded admin account.
 2. Configure **Settings** (site name, contact, social links) and **Navigation**.
-3. Create a **Page**, add content blocks (hero, rich text, image, CTA, menu, gallery, schedule, form, couple, gift), save as draft.
+3. Create a **Page**, add content blocks (hero, rich text, image, CTA, menu, gallery, schedule, form, couple, gift, cover), save as draft.
 4. As an admin, publish the page. Optionally mark it as the homepage (only one page can be the homepage at a time).
 5. View it on the Nuxt frontend at `http://localhost:3000/{slug}` (or `/` if it's the homepage), or on the Blade baseline at `http://localhost:8000/{slug}`.
 

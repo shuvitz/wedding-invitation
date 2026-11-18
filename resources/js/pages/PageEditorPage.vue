@@ -360,6 +360,33 @@
                                 <p v-if="fieldError(`content.blocks.${index}.data.items`)" class="text-xs text-destructive">{{ fieldError(`content.blocks.${index}.data.items`) }}</p>
                             </template>
 
+                            <!-- Cover (full-screen opener; guest name comes from ?to=) -->
+                            <template v-else-if="block.type === 'cover'">
+                                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    <div class="space-y-2">
+                                        <Label>Title</Label>
+                                        <Input v-model="block.data.title" placeholder="The Wedding of" :disabled="!canEdit" />
+                                    </div>
+                                    <div class="space-y-2">
+                                        <Label>Names</Label>
+                                        <Input v-model="block.data.names" placeholder="Raka & Sekar" :disabled="!canEdit" />
+                                        <p v-if="fieldError(`content.blocks.${index}.data.names`)" class="text-xs text-destructive">{{ fieldError(`content.blocks.${index}.data.names`) }}</p>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <Label>Greeting</Label>
+                                        <Input v-model="block.data.greeting" placeholder="Kepada Yth. Bapak/Ibu/Saudara/i" :disabled="!canEdit" />
+                                    </div>
+                                    <div class="space-y-2">
+                                        <Label>Button Label</Label>
+                                        <Input v-model="block.data.button_label" placeholder="Buka Undangan" :disabled="!canEdit" />
+                                    </div>
+                                </div>
+                                <MediaPicker v-model="block.data.image_media_id" label="Background Image" :disabled="!canEdit" />
+                                <p class="text-xs text-muted-foreground">
+                                    Shown full-screen before the invitation. Add <code>?to=Guest+Name</code> to the page link to greet a guest by name.
+                                </p>
+                            </template>
+
                             <!-- Gift (bank / e-wallet accounts) -->
                             <template v-else-if="block.type === 'gift'">
                                 <div class="space-y-2">
@@ -412,6 +439,7 @@
                             <Button type="button" variant="outline" size="sm" @click="addBlock('form')">Form</Button>
                             <Button type="button" variant="outline" size="sm" @click="addBlock('couple')">Couple</Button>
                             <Button type="button" variant="outline" size="sm" @click="addBlock('gift')">Gift</Button>
+                            <Button type="button" variant="outline" size="sm" @click="addBlock('cover')">Cover</Button>
                         </div>
                     </CardContent>
                 </Card>
@@ -480,6 +508,7 @@ const blockTypeLabels = {
     form: 'Form',
     couple: 'Couple',
     gift: 'Gift',
+    cover: 'Cover',
 };
 
 function defaultBlockData(type) {
@@ -504,6 +533,8 @@ function defaultBlockData(type) {
             const person = () => ({ name: '', parents: '', instagram: '', image_media_id: null });
             return { title: '', items: [person(), person()] };
         }
+        case 'cover':
+            return { title: '', names: '', greeting: '', button_label: '', image_media_id: null };
         case 'gift':
             return { title: '', description: '', items: [{ bank: '', account_number: '', account_name: '' }] };
         default:
