@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Guests;
 
+use App\Models\FormSubmission;
 use App\Models\Guest;
+use App\Models\Page;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -49,6 +51,27 @@ class GuestTest extends TestCase
         parse_str(parse_url($local->whatsappUrl(), PHP_URL_QUERY), $query);
         $this->assertStringContainsString('Kepada Yth. Budi,', $query['text']);
         $this->assertStringContainsString('https://undangan.example/?to=Budi', $query['text']);
+    }
+
+    public function test_guest_list_shows_each_guests_latest_reply(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $page = Page::factory()->published()->create();
+        Guest::factory()->create(['name' => 'Budi Santoso']);
+        Guest::factory()->create(['name' => 'Citra']);
+        $reply = fn (string $to, string $attendance) => FormSubmission::create([
+            'page_id' => $page->id, 'form_key' => 'rsvp', 'invited_as' => $to, 'data' => ['kehadiran' => $attendance],
+        ]);
+        $reply('Budi Santoso', 'Tidak Hadir');
+        $reply('Budi Santoso', 'Hadir');
+        $reply('Someone Else', 'Hadir');
+
+        $this->actingAs($admin)->getJson('/api/guests')
+            ->assertOk()
+            ->assertJsonPath('data.0.name', 'Budi Santoso')
+            ->assertJsonPath('data.0.reply.data.kehadiran', 'Hadir')
+            ->assertJsonPath('data.1.name', 'Citra')
+            ->assertJsonPath('data.1.reply', null);
     }
 
     public function test_guest_fields_are_validated(): void

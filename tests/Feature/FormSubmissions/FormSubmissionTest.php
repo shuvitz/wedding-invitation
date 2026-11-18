@@ -54,6 +54,21 @@ class FormSubmissionTest extends TestCase
         $this->assertSame(['name' => 'Budi', 'attendance' => 'Hadir', 'guests' => 2, 'message' => 'Selamat!'], $submission->data);
     }
 
+    public function test_the_invitation_name_is_stored_apart_from_the_answers(): void
+    {
+        $this->publishedPageWithForm();
+
+        $this->postJson('/api/public/pages/wedding/forms/rsvp', ['name' => 'Budi', 'attendance' => 'Hadir', '_to' => '  Budi Santoso  '])
+            ->assertCreated();
+        $this->postJson('/api/public/pages/wedding/forms/rsvp', ['name' => 'Ani', 'attendance' => 'Hadir', '_to' => ['x']])
+            ->assertCreated();
+
+        [$budi, $ani] = FormSubmission::orderBy('id')->get();
+        $this->assertSame('Budi Santoso', $budi->invited_as);
+        $this->assertArrayNotHasKey('_to', $budi->data);
+        $this->assertNull($ani->invited_as);
+    }
+
     public function test_undefined_fields_are_dropped(): void
     {
         $this->publishedPageWithForm();

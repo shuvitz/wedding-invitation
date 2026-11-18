@@ -13,6 +13,7 @@ class FormSubmission extends Model
     protected $fillable = [
         'page_id',
         'form_key',
+        'invited_as',
         'data',
     ];
 

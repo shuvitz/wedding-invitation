@@ -14,16 +14,29 @@
         <Card>
             <CardContent class="space-y-4 pt-6">
                 <div class="flex items-center justify-between gap-4">
-                    <Input v-model="search" type="search" placeholder="Search by name…" class="max-w-xs" @input="onSearchInput" />
-                    <p class="text-sm text-muted-foreground">{{ guests.length }} guest{{ guests.length === 1 ? '' : 's' }}</p>
+                    <div class="flex flex-1 items-center gap-2">
+                        <Input v-model="search" type="search" placeholder="Search by name…" class="max-w-xs" @input="onSearchInput" />
+                        <select
+                            v-model="replyFilter"
+                            aria-label="Filter by RSVP"
+                            class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        >
+                            <option value="all">All</option>
+                            <option value="replied">Replied</option>
+                            <option value="waiting">Not replied yet</option>
+                        </select>
+                    </div>
+                    <p class="text-sm text-muted-foreground">
+                        {{ repliedCount }} of {{ guests.length }} replied
+                    </p>
                 </div>
 
                 <div v-if="isLoading && guests.length === 0" class="py-10 text-center text-sm text-muted-foreground">
                     Loading guests…
                 </div>
 
-                <div v-else-if="guests.length === 0" class="py-10 text-center text-sm text-muted-foreground">
-                    {{ search ? 'No guests match your search.' : 'No guests yet.' }}
+                <div v-else-if="visibleGuests.length === 0" class="py-10 text-center text-sm text-muted-foreground">
+                    {{ search || replyFilter !== 'all' ? 'No guests match your filters.' : 'No guests yet.' }}
                 </div>
 
                 <div v-else class="overflow-x-auto">
@@ -33,14 +46,26 @@
                                 <th class="pb-2 pr-4 font-medium">Name</th>
                                 <th class="pb-2 pr-4 font-medium">Phone</th>
                                 <th class="pb-2 pr-4 font-medium">Notes</th>
+                                <th class="pb-2 pr-4 font-medium">RSVP</th>
                                 <th class="pb-2 font-medium">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="guest in guests" :key="guest.id" class="border-b border-border last:border-0">
+                            <tr v-for="guest in visibleGuests" :key="guest.id" class="border-b border-border last:border-0">
                                 <td class="py-3 pr-4 font-medium text-foreground">{{ guest.name }}</td>
                                 <td class="py-3 pr-4 text-muted-foreground">{{ guest.phone || '—' }}</td>
                                 <td class="py-3 pr-4 text-muted-foreground">{{ guest.notes || '—' }}</td>
+                                <td class="max-w-xs py-3 pr-4">
+                                    <template v-if="guest.reply">
+                                        <span class="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-600">
+                                            Replied {{ formatDate(guest.reply.created_at) }}
+                                        </span>
+                                        <p class="mt-1 truncate text-xs text-muted-foreground" :title="replySummary(guest)">{{ replySummary(guest) }}</p>
+                                    </template>
+                                    <span v-else class="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                                        Not yet
+                                    </span>
+                                </td>
                                 <td class="py-3">
                                     <div class="flex items-center gap-2">
                                         <Button variant="outline" size="sm" @click="copyLink(guest)">Copy Link</Button>
@@ -104,7 +129,7 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { guestsApi } from '@/api/guests.api';
 import { useUiStore } from '@/stores/ui.store';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -137,6 +162,24 @@ function onSearchInput() {
 }
 
 onMounted(fetchGuests);
+
+// ── RSVP ─────────────────────────────────────────────
+const replyFilter = ref('all');
+const repliedCount = computed(() => guests.value.filter((g) => g.reply).length);
+const visibleGuests = computed(() => {
+    if (replyFilter.value === 'all') return guests.value;
+    return guests.value.filter((g) => (replyFilter.value === 'replied') === !!g.reply);
+});
+
+// The reply's answers in form order, minus the guest's own name (already in the Name column).
+function replySummary(guest) {
+    return Object.values(guest.reply.data)
+        .filter((value) => value !== null && value !== '' && String(value).toLowerCase() !== guest.name.toLowerCase())
+        .join(' · ');
+}
+
+const dateFormat = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short' });
+const formatDate = (iso) => dateFormat.format(new Date(iso));
 
 async function copyLink(guest) {
     try {

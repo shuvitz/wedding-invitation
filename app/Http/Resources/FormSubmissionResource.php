@@ -15,6 +15,7 @@ class FormSubmissionResource extends JsonResource
         return [
             'id'         => $this->id,
             'form_key'   => $this->form_key,
+            'invited_as' => $this->invited_as,
             'data'       => $this->data,
             'created_at' => $this->created_at,
         ];

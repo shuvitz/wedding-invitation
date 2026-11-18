@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Guests\SaveGuestRequest;
 use App\Http\Resources\GuestResource;
+use App\Models\FormSubmission;
 use App\Models\Guest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,6 +26,19 @@ class GuestController extends Controller
             ->when($request->filled('search'), fn ($query) => $query->where('name', 'like', '%'.$request->string('search').'%'))
             ->orderBy('name')
             ->get();
+
+        // Each guest's latest reply, matched on the `?to=` name their link carried (case-insensitive).
+        // shortcut: renaming a guest unlinks replies sent under the old name; store a guest token in the link if that matters.
+        $key = fn (string $name) => mb_strtolower($name);
+        $replies = FormSubmission::query()
+            ->whereIn('invited_as', $guests->pluck('name'))
+            ->latest()
+            ->orderByDesc('id')
+            ->get()
+            ->unique(fn (FormSubmission $reply) => $key($reply->invited_as))
+            ->keyBy(fn (FormSubmission $reply) => $key($reply->invited_as));
+
+        $guests->each(fn (Guest $guest) => $guest->setRelation('reply', $replies->get($key($guest->name))));
 
         return GuestResource::collection($guests);
     }

@@ -19,6 +19,11 @@ class GuestResource extends JsonResource
             'notes' => $this->notes,
             'invitation_url' => $this->invitationUrl(),
             'whatsapp_url' => $this->whatsappUrl(),
+            // Only on the list (GuestController@index); null = hasn't replied.
+            'reply' => $this->whenLoaded('reply', fn () => $this->reply ? [
+                'data' => $this->reply->data,
+                'created_at' => $this->reply->created_at,
+            ] : null),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

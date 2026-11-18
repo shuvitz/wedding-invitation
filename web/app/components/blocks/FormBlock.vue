@@ -84,6 +84,13 @@ const generalError = ref('');
 const successMessage = ref('');
 const isSubmitting = ref(false);
 
+// The guest's name from their invitation link (`?to=`), so the admin's guest list can show who replied.
+const route = useRoute();
+const invitedAs = computed(() => {
+    const to = route.query.to;
+    return (Array.isArray(to) ? to[0] : to) ?? '';
+});
+
 function inputId(name: string): string {
     return `form-${props.data.form_key}-${name}`;
 }
@@ -97,7 +104,7 @@ async function submit() {
         const response = await api<{ message: string }>(`/pages/${props.pageSlug}/forms/${props.data.form_key}`, {
             method: 'POST',
             headers: { Accept: 'application/json' },
-            body: { ...values, _hp: honeypot.value },
+            body: { ...values, _hp: honeypot.value, _to: invitedAs.value },
         });
         successMessage.value = response.message;
     } catch (error: any) {

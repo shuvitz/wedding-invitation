@@ -10,6 +10,7 @@ use App\Models\Page;
 use App\Services\BlockRegistry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 /**
  * The public API's only write endpoint. Everything a submission may
@@ -53,6 +54,10 @@ class FormSubmissionController extends Controller
         FormSubmission::create([
             'page_id' => $page->id,
             'form_key' => $formKey,
+            // The `?to=` name from the guest's invitation link (sent as `_to`), if any.
+            'invited_as' => is_string($request->input('_to'))
+                ? (Str::limit(trim($request->input('_to')), 100, '') ?: null)
+                : null,
             'data' => $data,
         ]);
 
