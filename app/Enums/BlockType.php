@@ -12,4 +12,5 @@ enum BlockType: string
     case Gallery = 'gallery';
     case Schedule = 'schedule';
     case Form = 'form';
+    case Couple = 'couple';
 }

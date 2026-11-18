@@ -133,6 +133,20 @@ export interface FormBlockData {
     fields: FormField[]
 }
 
+export interface CouplePerson {
+    name: string | null
+    parents: string | null
+    instagram: string | null // bare username, no @
+    image_url: string | null
+    width: number | null
+    height: number | null
+}
+
+export interface CoupleBlockData {
+    title: string | null
+    items: CouplePerson[]
+}
+
 export type PageBlock =
     | { type: 'hero'; data: HeroBlockData }
     | { type: 'rich_text'; data: RichTextBlockData }
@@ -142,6 +156,7 @@ export type PageBlock =
     | { type: 'gallery'; data: GalleryBlockData }
     | { type: 'schedule'; data: ScheduleBlockData }
     | { type: 'form'; data: FormBlockData }
+    | { type: 'couple'; data: CoupleBlockData }
     // Laravel already drops unknown block types before this reaches Nuxt
     // (BlockRegistry::resolveForPublic), but the type stays open so a
     // future block type Nuxt doesn't know about yet fails safely here too

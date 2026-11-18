@@ -204,6 +204,29 @@ class PublicApiTest extends TestCase
             ->assertJsonPath('data.content.blocks.0.data.items.0.maps_url', 'https://maps.app.goo.gl/abc');
     }
 
+    public function test_public_page_resolves_couple_photos_and_excludes_media_id(): void
+    {
+        $media = Media::factory()->create();
+        Page::factory()->published()->create([
+            'slug' => 'couple-page',
+            'content' => ['blocks' => [
+                ['type' => 'couple', 'data' => ['title' => 'Mempelai', 'items' => [
+                    ['name' => 'Raka', 'parents' => 'Putra dari Bapak A', 'instagram' => 'raka', 'image_media_id' => $media->id],
+                    ['name' => 'Sekar'],
+                ]]],
+            ]],
+        ]);
+
+        $this->getJson('/api/public/pages/couple-page')
+            ->assertOk()
+            ->assertJsonPath('data.content.blocks.0.type', 'couple')
+            ->assertJsonPath('data.content.blocks.0.data.items.0.name', 'Raka')
+            ->assertJsonPath('data.content.blocks.0.data.items.0.instagram', 'raka')
+            ->assertJsonPath('data.content.blocks.0.data.items.0.image_url', Storage::disk($media->disk)->url($media->path))
+            ->assertJsonPath('data.content.blocks.0.data.items.1.image_url', null)
+            ->assertJsonMissingPath('data.content.blocks.0.data.items.0.image_media_id');
+    }
+
     public function test_public_page_resolves_menu_item_media_and_excludes_media_id(): void
     {
         $media = Media::factory()->create();

@@ -329,6 +329,36 @@
                                 <p v-if="fieldError(`content.blocks.${index}.data.fields`)" class="text-xs text-destructive">{{ fieldError(`content.blocks.${index}.data.fields`) }}</p>
                                 <Button v-if="canEdit" type="button" variant="outline" size="sm" @click="addFormField(block)">+ Add Field</Button>
                             </template>
+
+                            <!-- Couple (always exactly two people, in display order) -->
+                            <template v-else-if="block.type === 'couple'">
+                                <div class="space-y-2">
+                                    <Label>Title</Label>
+                                    <Input v-model="block.data.title" placeholder="Mempelai" :disabled="!canEdit" />
+                                </div>
+
+                                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    <div v-for="(item, itemIndex) in block.data.items" :key="itemIndex" class="space-y-3 rounded-md border border-border p-3">
+                                        <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Person {{ itemIndex + 1 }}</span>
+                                        <div class="space-y-2">
+                                            <Label>Name</Label>
+                                            <Input v-model="item.name" placeholder="Raka Pratama, S.T." :disabled="!canEdit" />
+                                            <p v-if="fieldError(`content.blocks.${index}.data.items.${itemIndex}.name`)" class="text-xs text-destructive">{{ fieldError(`content.blocks.${index}.data.items.${itemIndex}.name`) }}</p>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <Label>Parents</Label>
+                                            <Textarea v-model="item.parents" rows="2" placeholder="Putra pertama dari Bapak … & Ibu …" :disabled="!canEdit" />
+                                        </div>
+                                        <div class="space-y-2">
+                                            <Label>Instagram username</Label>
+                                            <Input v-model="item.instagram" placeholder="rakapratama (without @)" :disabled="!canEdit" />
+                                            <p v-if="fieldError(`content.blocks.${index}.data.items.${itemIndex}.instagram`)" class="text-xs text-destructive">{{ fieldError(`content.blocks.${index}.data.items.${itemIndex}.instagram`) }}</p>
+                                        </div>
+                                        <MediaPicker v-model="item.image_media_id" label="Photo" :disabled="!canEdit" />
+                                    </div>
+                                </div>
+                                <p v-if="fieldError(`content.blocks.${index}.data.items`)" class="text-xs text-destructive">{{ fieldError(`content.blocks.${index}.data.items`) }}</p>
+                            </template>
                         </div>
 
                         <div v-if="canEdit" class="flex flex-wrap gap-2 border-t border-border pt-4">
@@ -341,6 +371,7 @@
                             <Button type="button" variant="outline" size="sm" @click="addBlock('gallery')">Gallery</Button>
                             <Button type="button" variant="outline" size="sm" @click="addBlock('schedule')">Schedule</Button>
                             <Button type="button" variant="outline" size="sm" @click="addBlock('form')">Form</Button>
+                            <Button type="button" variant="outline" size="sm" @click="addBlock('couple')">Couple</Button>
                         </div>
                     </CardContent>
                 </Card>
@@ -407,6 +438,7 @@ const blockTypeLabels = {
     gallery: 'Gallery',
     schedule: 'Schedule',
     form: 'Form',
+    couple: 'Couple',
 };
 
 function defaultBlockData(type) {
@@ -427,6 +459,10 @@ function defaultBlockData(type) {
             return { title: '', items: [] };
         case 'form':
             return { form_key: '', title: '', submit_label: '', success_message: '', fields: [] };
+        case 'couple': {
+            const person = () => ({ name: '', parents: '', instagram: '', image_media_id: null });
+            return { title: '', items: [person(), person()] };
+        }
         default:
             return {};
     }

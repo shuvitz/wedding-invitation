@@ -284,6 +284,47 @@ class PageManagementTest extends TestCase
         $response->assertStatus(422)->assertJsonValidationErrors(['content.blocks.0.data.items.0.maps_url']);
     }
 
+    public function test_couple_block_accepts_two_people(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $media = Media::factory()->create();
+
+        $response = $this->actingAs($admin)->postJson('/api/pages', [
+            'title' => 'Couple Page',
+            'content' => ['blocks' => [
+                ['type' => 'couple', 'data' => ['title' => 'Mempelai', 'items' => [
+                    ['name' => 'Raka', 'parents' => 'Putra dari Bapak A & Ibu B', 'instagram' => 'raka.pratama_', 'image_media_id' => $media->id],
+                    ['name' => 'Sekar'],
+                ]]],
+            ]],
+        ]);
+
+        $response->assertCreated();
+        $this->assertCount(2, Page::first()->content['blocks'][0]['data']['items']);
+    }
+
+    public function test_couple_block_requires_exactly_two_named_people_and_a_bare_instagram_username(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $response = $this->actingAs($admin)->postJson('/api/pages', [
+            'title' => 'Bad Couple',
+            'content' => ['blocks' => [
+                ['type' => 'couple', 'data' => ['items' => [['name' => 'Raka']]]],
+                ['type' => 'couple', 'data' => ['items' => [
+                    ['parents' => 'no name'],
+                    ['name' => 'Sekar', 'instagram' => 'https://instagram.com/x'],
+                ]]],
+            ]],
+        ]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors([
+            'content.blocks.0.data.items',
+            'content.blocks.1.data.items.0.name',
+            'content.blocks.1.data.items.1.instagram',
+        ]);
+    }
+
     public function test_gallery_block_accepts_valid_items(): void
     {
         $admin = User::factory()->admin()->create();

@@ -112,6 +112,16 @@ class BlockRegistry
                 "{$prefix}.fields.*.options" => ["required_if:{$prefix}.fields.*.type,select", 'nullable', 'array', 'max:50'],
                 "{$prefix}.fields.*.options.*" => ['required', 'string', 'max:255'],
             ],
+            // Exactly two people, in display order. Instagram is a bare
+            // username; renderers build the link, so there's no URL to vet.
+            BlockType::Couple => [
+                "{$prefix}.title" => ['nullable', 'string', 'max:255'],
+                "{$prefix}.items" => ['required', 'array', 'size:2'],
+                "{$prefix}.items.*.name" => ['required', 'string', 'max:255'],
+                "{$prefix}.items.*.parents" => ['nullable', 'string', 'max:500'],
+                "{$prefix}.items.*.image_media_id" => ['nullable', 'integer', 'exists:media,id'],
+                "{$prefix}.items.*.instagram" => ['nullable', 'string', 'regex:/^[A-Za-z0-9._]{1,30}$/'],
+            ],
             default => [],
         };
     }
@@ -136,6 +146,7 @@ class BlockRegistry
             // Nuxt renders them. Add a Blade view + web route if a site
             // ever serves forms from the Blade renderer.
             BlockType::Form => null,
+            BlockType::Couple => 'public.blocks.couple',
             default => null,
         };
     }
@@ -219,6 +230,15 @@ class BlockRegistry
                     'required' => (bool) ($field['required'] ?? false),
                     'options' => array_values($field['options'] ?? []),
                 ], $data['fields'] ?? [])),
+            ]],
+            BlockType::Couple => ['type' => 'couple', 'data' => [
+                'title' => $data['title'] ?? null,
+                'items' => array_values(array_map(fn (array $item) => [
+                    'name' => $item['name'] ?? null,
+                    'parents' => $item['parents'] ?? null,
+                    'instagram' => $item['instagram'] ?? null,
+                    ...self::resolveImageFields($item['image_media_id'] ?? null, 'image_url'),
+                ], $data['items'] ?? [])),
             ]],
             default => null,
         };

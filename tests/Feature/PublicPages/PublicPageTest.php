@@ -212,6 +212,27 @@ class PublicPageTest extends TestCase
         $response->assertSee('https://maps.app.goo.gl/abc', false);
     }
 
+    public function test_couple_block_renders_names_parents_photo_and_instagram_link(): void
+    {
+        $media = Media::factory()->create();
+        Page::factory()->published()->create([
+            'slug' => 'couple-blade',
+            'content' => ['blocks' => [
+                ['type' => 'couple', 'data' => ['title' => 'Mempelai', 'items' => [
+                    ['name' => 'Raka Pratama', 'parents' => 'Putra dari Bapak A & Ibu B', 'instagram' => 'raka', 'image_media_id' => $media->id],
+                    ['name' => 'Sekar Ayu'],
+                ]]],
+            ]],
+        ]);
+
+        $response = $this->get('/couple-blade');
+
+        $response->assertOk();
+        $response->assertSeeInOrder(['Mempelai', 'Raka Pratama', 'Putra dari Bapak A &amp; Ibu B', 'Sekar Ayu'], false);
+        $response->assertSee('href="https://instagram.com/raka"', false);
+        $response->assertSee(Storage::disk($media->disk)->url($media->path), false);
+    }
+
     public function test_menu_block_renders_names_prices_and_images(): void
     {
         $media = Media::factory()->create();
