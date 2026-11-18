@@ -233,6 +233,23 @@ class PublicPageTest extends TestCase
         $response->assertSee(Storage::disk($media->disk)->url($media->path), false);
     }
 
+    public function test_gift_block_renders_accounts(): void
+    {
+        Page::factory()->published()->create([
+            'slug' => 'gift-blade',
+            'content' => ['blocks' => [
+                ['type' => 'gift', 'data' => ['title' => 'Amplop Digital', 'description' => 'Doa restu Anda sudah cukup.', 'items' => [
+                    ['bank' => 'BCA', 'account_number' => '1234 5678 90', 'account_name' => 'Raka Pratama'],
+                ]]],
+            ]],
+        ]);
+
+        $response = $this->get('/gift-blade');
+
+        $response->assertOk();
+        $response->assertSeeInOrder(['Amplop Digital', 'Doa restu Anda sudah cukup.', 'BCA', '1234 5678 90', 'a.n. Raka Pratama']);
+    }
+
     public function test_menu_block_renders_names_prices_and_images(): void
     {
         $media = Media::factory()->create();

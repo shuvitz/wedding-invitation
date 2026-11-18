@@ -359,6 +359,45 @@
                                 </div>
                                 <p v-if="fieldError(`content.blocks.${index}.data.items`)" class="text-xs text-destructive">{{ fieldError(`content.blocks.${index}.data.items`) }}</p>
                             </template>
+
+                            <!-- Gift (bank / e-wallet accounts) -->
+                            <template v-else-if="block.type === 'gift'">
+                                <div class="space-y-2">
+                                    <Label>Title</Label>
+                                    <Input v-model="block.data.title" placeholder="Amplop Digital" :disabled="!canEdit" />
+                                </div>
+                                <div class="space-y-2">
+                                    <Label>Description</Label>
+                                    <Textarea v-model="block.data.description" rows="2" :disabled="!canEdit" />
+                                </div>
+
+                                <div v-for="(item, itemIndex) in block.data.items" :key="itemIndex" class="space-y-3 rounded-md border border-border p-3">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Account {{ itemIndex + 1 }}</span>
+                                        <Button v-if="canEdit" type="button" variant="outline" size="xs" class="text-destructive" @click="block.data.items.splice(itemIndex, 1)">Remove</Button>
+                                    </div>
+                                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                        <div class="space-y-2">
+                                            <Label>Bank / E-wallet</Label>
+                                            <Input v-model="item.bank" placeholder="BCA" :disabled="!canEdit" />
+                                            <p v-if="fieldError(`content.blocks.${index}.data.items.${itemIndex}.bank`)" class="text-xs text-destructive">{{ fieldError(`content.blocks.${index}.data.items.${itemIndex}.bank`) }}</p>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <Label>Account Number</Label>
+                                            <Input v-model="item.account_number" placeholder="1234 5678 90" :disabled="!canEdit" />
+                                            <p v-if="fieldError(`content.blocks.${index}.data.items.${itemIndex}.account_number`)" class="text-xs text-destructive">{{ fieldError(`content.blocks.${index}.data.items.${itemIndex}.account_number`) }}</p>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <Label>Account Name</Label>
+                                            <Input v-model="item.account_name" :disabled="!canEdit" />
+                                            <p v-if="fieldError(`content.blocks.${index}.data.items.${itemIndex}.account_name`)" class="text-xs text-destructive">{{ fieldError(`content.blocks.${index}.data.items.${itemIndex}.account_name`) }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <p v-if="fieldError(`content.blocks.${index}.data.items`)" class="text-xs text-destructive">{{ fieldError(`content.blocks.${index}.data.items`) }}</p>
+                                <Button v-if="canEdit" type="button" variant="outline" size="sm" @click="block.data.items.push({ bank: '', account_number: '', account_name: '' })">+ Add Account</Button>
+                            </template>
                         </div>
 
                         <div v-if="canEdit" class="flex flex-wrap gap-2 border-t border-border pt-4">
@@ -372,6 +411,7 @@
                             <Button type="button" variant="outline" size="sm" @click="addBlock('schedule')">Schedule</Button>
                             <Button type="button" variant="outline" size="sm" @click="addBlock('form')">Form</Button>
                             <Button type="button" variant="outline" size="sm" @click="addBlock('couple')">Couple</Button>
+                            <Button type="button" variant="outline" size="sm" @click="addBlock('gift')">Gift</Button>
                         </div>
                     </CardContent>
                 </Card>
@@ -439,6 +479,7 @@ const blockTypeLabels = {
     schedule: 'Schedule',
     form: 'Form',
     couple: 'Couple',
+    gift: 'Gift',
 };
 
 function defaultBlockData(type) {
@@ -463,6 +504,8 @@ function defaultBlockData(type) {
             const person = () => ({ name: '', parents: '', instagram: '', image_media_id: null });
             return { title: '', items: [person(), person()] };
         }
+        case 'gift':
+            return { title: '', description: '', items: [{ bank: '', account_number: '', account_name: '' }] };
         default:
             return {};
     }

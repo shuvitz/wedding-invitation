@@ -227,6 +227,23 @@ class PublicApiTest extends TestCase
             ->assertJsonMissingPath('data.content.blocks.0.data.items.0.image_media_id');
     }
 
+    public function test_public_page_returns_gift_accounts(): void
+    {
+        $account = ['bank' => 'BCA', 'account_number' => '1234 5678 90', 'account_name' => 'Raka Pratama'];
+        Page::factory()->published()->create([
+            'slug' => 'gift-page',
+            'content' => ['blocks' => [
+                ['type' => 'gift', 'data' => ['title' => 'Amplop Digital', 'items' => [$account + ['extra' => 'dropped']]]],
+            ]],
+        ]);
+
+        $this->getJson('/api/public/pages/gift-page')
+            ->assertOk()
+            ->assertJsonPath('data.content.blocks.0.type', 'gift')
+            ->assertJsonPath('data.content.blocks.0.data.description', null)
+            ->assertJsonPath('data.content.blocks.0.data.items.0', $account);
+    }
+
     public function test_public_page_resolves_menu_item_media_and_excludes_media_id(): void
     {
         $media = Media::factory()->create();

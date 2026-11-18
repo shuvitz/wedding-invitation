@@ -10,7 +10,7 @@ class BlockRegistryTest extends TestCase
     public function test_types_lists_exactly_the_whitelisted_block_types(): void
     {
         $this->assertEqualsCanonicalizing(
-            ['hero', 'rich_text', 'image', 'cta', 'menu', 'gallery', 'schedule', 'form', 'couple'],
+            ['hero', 'rich_text', 'image', 'cta', 'menu', 'gallery', 'schedule', 'form', 'couple', 'gift'],
             BlockRegistry::types()
         );
     }

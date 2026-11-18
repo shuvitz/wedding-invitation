@@ -325,6 +325,47 @@ class PageManagementTest extends TestCase
         ]);
     }
 
+    public function test_gift_block_accepts_valid_accounts(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $response = $this->actingAs($admin)->postJson('/api/pages', [
+            'title' => 'Gift Page',
+            'content' => ['blocks' => [
+                ['type' => 'gift', 'data' => ['title' => 'Amplop Digital', 'description' => 'Doa restu Anda sudah cukup.', 'items' => [
+                    ['bank' => 'BCA', 'account_number' => '1234 5678 90', 'account_name' => 'Raka Pratama'],
+                    ['bank' => 'GoPay', 'account_number' => '0812-3456-7890', 'account_name' => 'Sekar Ayu'],
+                ]]],
+            ]],
+        ]);
+
+        $response->assertCreated();
+        $this->assertCount(2, Page::first()->content['blocks'][0]['data']['items']);
+    }
+
+    public function test_gift_block_requires_accounts_with_numeric_account_numbers(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $response = $this->actingAs($admin)->postJson('/api/pages', [
+            'title' => 'Bad Gift',
+            'content' => ['blocks' => [
+                ['type' => 'gift', 'data' => ['items' => []]],
+                ['type' => 'gift', 'data' => ['items' => [
+                    ['account_number' => '123'],
+                    ['bank' => 'BCA', 'account_number' => '<b>123</b>', 'account_name' => 'Raka'],
+                ]]],
+            ]],
+        ]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors([
+            'content.blocks.0.data.items',
+            'content.blocks.1.data.items.0.bank',
+            'content.blocks.1.data.items.0.account_name',
+            'content.blocks.1.data.items.1.account_number',
+        ]);
+    }
+
     public function test_gallery_block_accepts_valid_items(): void
     {
         $admin = User::factory()->admin()->create();

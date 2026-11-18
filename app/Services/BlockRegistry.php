@@ -122,6 +122,16 @@ class BlockRegistry
                 "{$prefix}.items.*.image_media_id" => ['nullable', 'integer', 'exists:media,id'],
                 "{$prefix}.items.*.instagram" => ['nullable', 'string', 'regex:/^[A-Za-z0-9._]{1,30}$/'],
             ],
+            // Bank or e-wallet accounts. Numbers are digits with optional
+            // spaces/dashes for readability; the copy button strips those.
+            BlockType::Gift => [
+                "{$prefix}.title" => ['nullable', 'string', 'max:255'],
+                "{$prefix}.description" => ['nullable', 'string', 'max:1000'],
+                "{$prefix}.items" => ['required', 'array', 'min:1', 'max:10'],
+                "{$prefix}.items.*.bank" => ['required', 'string', 'max:100'],
+                "{$prefix}.items.*.account_number" => ['required', 'string', 'max:50', 'regex:/^[0-9][0-9 \-]*$/'],
+                "{$prefix}.items.*.account_name" => ['required', 'string', 'max:255'],
+            ],
             default => [],
         };
     }
@@ -147,6 +157,7 @@ class BlockRegistry
             // ever serves forms from the Blade renderer.
             BlockType::Form => null,
             BlockType::Couple => 'public.blocks.couple',
+            BlockType::Gift => 'public.blocks.gift',
             default => null,
         };
     }
@@ -238,6 +249,15 @@ class BlockRegistry
                     'parents' => $item['parents'] ?? null,
                     'instagram' => $item['instagram'] ?? null,
                     ...self::resolveImageFields($item['image_media_id'] ?? null, 'image_url'),
+                ], $data['items'] ?? [])),
+            ]],
+            BlockType::Gift => ['type' => 'gift', 'data' => [
+                'title' => $data['title'] ?? null,
+                'description' => $data['description'] ?? null,
+                'items' => array_values(array_map(fn (array $item) => [
+                    'bank' => $item['bank'] ?? null,
+                    'account_number' => $item['account_number'] ?? null,
+                    'account_name' => $item['account_name'] ?? null,
                 ], $data['items'] ?? [])),
             ]],
             default => null,
